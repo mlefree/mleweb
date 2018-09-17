@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>REVOLUTECH - S2II Libérée à Haute Valeur Ajoutée</title>
+    
+    <link href="data:image/x-icon;base64,AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/////////////////////AAD//wAA//8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA////////////////AAD//wAA//8AAFn/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP///////////////wAA//8AAP//AAAC/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD///////////////8AAP//AAD//wAAAP8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA///////////p6f//AAD//wAA//8AAAD/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP//////////AAD//wAA//8AAP//AAAA/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//8AAP//AAD/////////////rq7//wAA//8AAAD/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA////////AAD//wAA//8AAP///////wAA//8AAP//AAAA/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP///////////////wAA//8AAP//AAD//wAA////////AAD//wAA//8AAAD/AAAAAAAAAAAAAAAAAAAAAP39//////////////////8AAP//AAD//wAAAP8AAP//AAD///////8AAP//AAAA/wAAAAAAAAAAAAAAAAAAAAD//////////wAA//8AAP//AAD//wAAAP8AAAD/AAAA/wAA//8AAP//AAD//wAAAP8AAAAAAAAAAAAAAAAAAAAA//////////8AAAD/AAAA/wAAAP8AAP//AAAA/wEB//8AAAD/AAD//wAAAP8AAAD/AAAAAAAAAAAAAAAAAAAAAP//////////AAD//wAAAP8AAAD//////wAA+P//////AAD///////8AAP//AAAA/wAAAAAAAAAAAAAAAAAAAAD8/P///f3///39//8AAP//AAAA//////8AAP///////wAA//8AAAD/AAD//wQEBP0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/////AAD//wAAAP//////AAD///////8AAP//AAAA/QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/////wAA//8AAAAAAAD//wAAAP8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/A8AAPwPAAD8DwAA/A8AAPwPAAD8DwAA+AcAAPAHAADgAwAAwAMAAMADAADAAwAAwAMAAMADAADwDwAA8n8AAA==" rel="icon" type="image/x-icon" />
+    
+    
+   <link href='https://fonts.googleapis.com/css?family=Lato:400,900,400italic,700italic' rel='stylesheet'>
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Bangers" rel="stylesheet">
+   
+    
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
+    
+    <style>
+        
+        
+        html, body, h1 {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  -webkit-transition: background-color 0.3s ease-in;
+  transition: background-color 0.3s ease-in;
+  font-family: "Open Sans", sans-serif;
+  background-color: #ff002b;
+  overflow: hidden;
+  font-size: 12px;
+}
+@media (min-width: 480px) {
+  body {
+    font-size: 14px;
+  }
+}
+@media (min-width: 640px) {
+  body {
+    font-size: 16px;
+  }
+}
+
+.word {
+  font-family: "Bangers", cursive;
+}
+
+svg {
+  height: 100%;
+  width: 100%;
+  position: relative;
+  top: -1rem;
+  -webkit-animation: pop-out 2s ease-in-out infinite;
+          animation: pop-out 2s ease-in-out infinite;
+}
+
+.word {
+  font-family: "Bangers", cursive;
+  letter-spacing: 0.05em;
+  color: white;
+  padding: 0.5em;
+  font-size: 28px;
+}
+@media (min-width: 480px) {
+  .word {
+    font-size: 36px;
+  }
+}
+@media (min-width: 640px) {
+  .word {
+    font-size: 48px;
+  }
+}
+@media (min-width: 960px) {
+  .word {
+    font-size: 64px;
+  }
+}
+@media (min-width: 1280px) {
+  .word {
+    font-size: 84px;
+  }
+}
+
+footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  line-height: 2rem;
+  text-align: right;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+@-webkit-keyframes pop-out {
+  0% {
+    -webkit-transform: scale3d(0, 0, 1);
+            transform: scale3d(0, 0, 1);
+    opacity: 1;
+  }
+  25% {
+    -webkit-transform: scale3d(1, 1, 1);
+            transform: scale3d(1, 1, 1);
+    opacity: 1;
+  }
+  100% {
+    -webkit-transform: scale3d(1.5, 1.5, 1);
+            transform: scale3d(1.5, 1.5, 1);
+    opacity: 0;
+  }
+}
+
+@keyframes pop-out {
+  0% {
+    -webkit-transform: scale3d(0, 0, 1);
+            transform: scale3d(0, 0, 1);
+    opacity: 1;
+  }
+  25% {
+    -webkit-transform: scale3d(1, 1, 1);
+            transform: scale3d(1, 1, 1);
+    opacity: 1;
+  }
+  100% {
+    -webkit-transform: scale3d(1.5, 1.5, 1);
+            transform: scale3d(1.5, 1.5, 1);
+    opacity: 0;
+  }
+}
+a, a:visited {
+  color: inherit;
+}
+
+    </style>
+    
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-63329886-7"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-63329886-todo');
+</script>
+
+    
+</head>
+<body>
+
+<h1>
+    <svg role="img">
+        <title class="title">MLE Nuxeo</title>
+      <text class="word" dominant-baseline="central" fill="#222" 
+            stroke="#222" stroke-linecap="round" stroke-width="1.5%" text-anchor="middle" x="50%" y="50%">revolutech</text>
+      <text class="word" dominant-baseline="central" fill="white" text-anchor="middle" x="50%" y="50%">revolutech</text>
+    </svg>
+</h1>
+<footer>
+  <b>&copy; 2018 <a href="mailto:mat@mlefree.com">mat</a></b>
+  
+<button type="button" class="btn btn-secondary rounded-circle" data-toggle="modal" data-target="#bot">
+  nuxeo bot fr
+</button>
+    
+</footer>
+      
+    <!-- Modal -->
+    <div class="modal fade" id="bot" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">nuxeo bot fr</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        
+        <iframe width="350" height="430" src="https://console.api.ai/api-client/demo/embedded/66fcef45-c688-4e36-bc6d-be487d44fead"></iframe>
+          
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+     
+
+</body>
+</html>
