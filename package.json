@@ -12,7 +12,7 @@
   },
   "scripts": {
     "clean": "rm -frd .gen && mkdir .gen",
-    "create": "cd .gen && yo fidj mat-cloud-app app2021 mat-cloud \"\", mlefree \"Mat Cloud App\" \"Welcome in my Cloud\" \"<img src=https://3.bp.blogspot.com/-vX0tnGUE4j4/V7xOTtIm6rI/AAAAAAAABKI/xvKjK_Mx0QoKd9Ew3EF_e70_JFr0VQJ7wCK4B/s920/Retro_Mario_in_3D_flavor_by_cezkid.gif /><br>hello@mlefree.com<br><br>Some updates are in progress...\" && npm run build && cd www && echo \"mlefree.com\" > CNAME",
+    "create": "cd .gen && yo fidj mat-cloud-app app2021 mat-cloud \"\" mlefree \"Mat Cloud App\" \"Welcome in my Cloud\" \"<img src=https://3.bp.blogspot.com/-vX0tnGUE4j4/V7xOTtIm6rI/AAAAAAAABKI/xvKjK_Mx0QoKd9Ew3EF_e70_JFr0VQJ7wCK4B/s920/Retro_Mario_in_3D_flavor_by_cezkid.gif /><br>hello@mlefree.com<br><br>Some updates are in progress...\" && npm run build && cd www && echo \"mlefree.com\" > CNAME",
     "build": "npm run clean && npm run create",
     "start": "cd .gen && npm run start"
   }
