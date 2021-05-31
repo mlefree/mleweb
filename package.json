@@ -1,13 +1,13 @@
 {
   "name": "mlefree",
-  "version": "3.3.5",
+  "version": "3.3.6",
   "description": "mat's cloud",
   "homepage": "https://mlefree.com",
   "license": "MIT",
   "keywords": [],
   "dependencies": {},
   "devDependencies": {
-    "generator-fidj": "^3.3.5",
+    "generator-fidj": "^3.3.6",
     "yo": "^4.1.0"
   },
   "scripts": {
