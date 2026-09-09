@@ -37,7 +37,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: ofidj/fidj-api-contracts
-          ref: 11932c26b536dd0841914231b46fc87a710a42c1
+          ref: b310aac4f456ac786081bb0e1cb506129ecb9763
           path: contracts
       - uses: actions/setup-node@v4
         with:
