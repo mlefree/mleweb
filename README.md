@@ -1,31 +1,41 @@
-# mleweb — Mat’s Cloud
+# mleweb — Mat Cloud App
 
-The real-world example for `@ofidj/generator-fidj`. This repository keeps its historical `_old/` and `_cdn/` content and generates the maintained TypeScript app into ignored `.gen/mleweb/`. Edit the generator template or `scripts/generate.mjs`; generated files are disposable.
+**mlefree.com is the website used to validate that Fidj generates a complete app from a small command.** This repository is an executable generator example: the `create` script in `package.json` supplies the public app ID, title, welcome text, original Mario GIF HTML, About/CV link, contact links and domain to `create-fidj`.
 
-## Local validation
+There is no separately maintained homepage or résumé. Change the CLI inputs for identity/content; fix reusable application behavior in `generator-fidj` or the JS/TypeScript SDK. `.gen/mleweb` is disposable output.
 
-Use Node 22 or later. Keep this repo at `Workspace/mlefree/mleweb` and Fidj at `Workspace/ofidj` (or set `FIDJ_GENERATOR_DIR` and `FIDJ_SDK_DIR`). Build the local SDK with `npm run build-dist` in `fidj-node`, then:
+## Generate and build
+
+Use Node 22 or 24. For this unreleased milestone, keep the repositories at `Workspace/mlefree/mleweb`, `Workspace/ofidj/generator-fidj` and `Workspace/ofidj/fidj-node`. Run `npm ci && npm run build-dist` in fidj-node first. Alternate checkouts can be selected through `FIDJ_GENERATOR_DIR` and `FIDJ_SDK_DIR` (the SDK's built `dist` directory).
 
 ```sh
 npm ci
+npm run build
+```
+
+`build` invokes `create`: run the public generator CLI, install generated dependencies, then `build-prod`. The generator accepts `--title`, `--welcome`, `--content` and `--domain`; these replace the old positional `yo fidj ... app2021 ...` inputs. `--replace` only replaces output carrying the generator's marker.
+
+The result is `.gen/mleweb/www`, including `CNAME` set to `mlefree.com`. It can be served by a static host. Sign-in and privacy calls go directly to Fidj using the generated client. The bundled Node server is an optional local preview, not a production hosting requirement for this content app.
+
+Production generation retains public app ID `fidj-f46d11011e19ef90` and `https://api.fidj.ovh/v3`. Build/tests do not log into production. This generation workflow does not publish the hosted website.
+
+## Validate locally
+
+```sh
 npm run build:local
 npm start
 ```
 
-Open http://localhost:8201. Start the local Fidj API/dashboard with `python3 scripts/local-stack.py start` from the Ofidj workspace. The local API seeds `fidj-local-mleweb` (Mat’s Cloud), owned by Alex, with Maya and Sam as members. Local demo shortcuts appear only with the loopback configuration.
+Open http://localhost:8201. Public content is visible without an account. Sign in, inspect current roles, toggle a preference, export app-scoped data or confirm departure. The About me link opens the original CV page; no CV copy is maintained here.
 
-Alex can grant Maya Editor access in the Fidj owner console. On the next protected backend request, Mat’s Cloud observes the new role; role claims cached in a browser are not authoritative. Its notes and privacy choices are scoped independently of Studio Notes, Trail Club and Fidj.
+Start the local Fidj API/console with `python3 scripts/local-stack.py start` from the Ofidj workspace. Local builds select `fidj-local-mleweb`, API port 3201 and console port 4200. Alex (`alex@fidj.local` / `local-demo-only`) owns the app; Maya (`maya@fidj.local` / `local-member-only`) is a member. Use the console to change roles, then refresh access here. Studio Notes at port 8200 separately demonstrates role-protected backend actions.
 
-## GitHub Actions
+## GitHub CI and acceptance
 
-`.github/workflows/generated-app.yml` replaces Travis. On PRs and version/main branch pushes it checks out the coordinated generator and SDK version branches, builds/tests them, generates mleweb from an empty output folder, typechecks/builds it and exercises its protected HTTP routes on Node 22 and 24. It uploads a build artifact and generation manifest. Tests use local HTTP fixtures and synthetic identities; CI does not log into the live Fidj service.
+GitHub Actions replaces Travis and runs `npm ci && npm test` on Node 22/24. It builds the pinned SDK and generator revisions, calls the same public generation command, checks the supplied identity and static artifact, and runs generated HTTP authorization/privacy tests. Uploaded artifacts contain `www` and the optional server build, without `.env`. CI does not deploy mlefree.com.
 
-The workflow pins the reviewed commits from generator `v1.0.1` and SDK `v3.6.24`. Manual runs can select alternate refs. Update the pins when testing a new generator/SDK change; switch to published versions for a registry-only release. Local generated output may use `file:` dependencies, but this repository’s package manifest does not.
+Review the `create` script, regenerate from scratch, inspect the local app and check the green CI matrix before accepting a generator change. The matching unreleased SDK/generator commits are pinned in the workflow; a registry-only release still requires publishing their coordinated versions.
 
-## Hosting and privacy limits
+## Scope
 
-The previous app2021 build targeted GitHub Pages. This starter includes a Node backend for role enforcement and therefore needs a Node host; the workflow deliberately has no deploy step. The existing site at https://mlefree.com is not changed by local validation.
-
-The historical production app ID remains `fidj-f46d11011e19ef90` for configured non-local builds. Building and testing do not contact it. `.env` stays in ignored generated output and contains only public identifiers/URLs.
-
-Notes are a temporary in-memory example. Exports from the generated app include its notes and Fidj membership data; leaving through the app erases both. A direct departure in Fidj revokes access but does not yet notify the app’s independent note store. Durable storage and the deletion adapter remain a later integration milestone.
+This static app stores its session in this browser and has no separate user-content database. Exports and departure cover the selected app's records held by Fidj. Pending cleanup is shown as pending. The example agreement must be replaced with the app owner's actual terms before release. CLI HTML is trusted developer-authored source, not visitor input.

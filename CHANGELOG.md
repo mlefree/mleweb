@@ -2,7 +2,8 @@
 
 ## 3.3.7 — Unreleased
 
-- Replace legacy Yeoman/app2021 build commands with the maintained TypeScript Fidj generator.
-- Add clean generation, build and HTTP integration tests to GitHub Actions on Node 22/24.
-- Add a loopback-only Mat’s Cloud demo using the local Fidj API and SDK.
-- Preserve historical content and production identifiers; no automatic deployment of the new backend app.
+- Replace Travis with GitHub Actions clean generation/build/tests on Node 22/24.
+- Keep the complete app specification in the small `create` command: original Mario HTML, welcome, About/CV/contact links and public Fidj ID.
+- Use the generator's static content mode and `build-prod` output (`www` plus `CNAME`) instead of a separately maintained homepage or résumé.
+- Remove bespoke generation/verification scripts; test the public CLI output and generated integration.
+- Support an explicit local API/app ID override. CI uploads artifacts without publishing mlefree.com.

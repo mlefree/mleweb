@@ -8,11 +8,11 @@
   "dependencies": {},
   "devDependencies": {},
   "scripts": {
-    "generate": "node scripts/generate.mjs",
-    "build": "node scripts/verify.mjs",
-    "test": "node scripts/verify.mjs",
-    "start": "npm start --prefix .gen/mleweb",
-    "build:local": "MLEWEB_LOCAL=true node scripts/verify.mjs"
+    "create": "node \"${FIDJ_GENERATOR_DIR:-../../ofidj/generator-fidj}/bin/create-fidj.cjs\" .gen/mleweb --replace --app-id fidj-f46d11011e19ef90 --api-endpoint https://api.fidj.ovh/v3 --sdk-path \"${FIDJ_SDK_DIR:-../../ofidj/fidj-node/dist}\" --title \"Mat Cloud App\" --welcome \"Welcome in my Cloud\" --content \"<img src=https://3.bp.blogspot.com/-vX0tnGUE4j4/V7xOTtIm6rI/AAAAAAAABKI/xvKjK_Mx0QoKd9Ew3EF_e70_JFr0VQJ7wCK4B/s920/Retro_Mario_in_3D_flavor_by_cezkid.gif /><br><br>About <a href='https://blog.mlefree.com/p/about.html'>me</a><br>Work with me on <a href='https://github.com/ofidj'>fidj</a> or feel free to contact<br><a href='https://twitter.com/mat_cloud'>twitter</a> - hello@mlefree.com<br>\" --domain mlefree.com && npm install --prefix .gen/mleweb --no-audit --no-fund && npm run build-prod --prefix .gen/mleweb",
+    "build": "npm run create",
+    "test": "npm run build && node --test test/*.test.mjs && npm test --prefix .gen/mleweb",
+    "start": "PORT=8201 npm start --prefix .gen/mleweb",
+    "build:local": "FIDJ_LOCAL=true FIDJ_APP_ID=fidj-local-mleweb npm test"
   },
   "engines": {
     "node": ">=22"
