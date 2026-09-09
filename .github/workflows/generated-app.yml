@@ -7,7 +7,7 @@ on:
     inputs:
       generator_ref:
         description: Generator version branch or commit to validate
-        default: d59bc3893ca164133a5d654db5331f544222ce5e
+        default: c9e05c42c7292a5446399fdd95bbd085ff0bdb5a
       sdk_ref:
         description: SDK version branch or commit to validate
         default: 54237009fd7b1ca2a727834e26c2f5ac77cb996f
@@ -27,7 +27,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: ofidj/generator-fidj
-          ref: ${{ inputs.generator_ref || 'd59bc3893ca164133a5d654db5331f544222ce5e' }}
+          ref: ${{ inputs.generator_ref || 'c9e05c42c7292a5446399fdd95bbd085ff0bdb5a' }}
           path: generator
       - uses: actions/checkout@v4
         with:
@@ -37,7 +37,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: ofidj/fidj-api-contracts
-          ref: 2c6b76cd6321f292311d9a216436bb052a9386db
+          ref: 8beb6a32f2a1f2c2d3df07558fb3c4a5fc7d99b3
           path: contracts
       - uses: actions/setup-node@v4
         with:
