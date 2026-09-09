@@ -7,10 +7,10 @@ on:
     inputs:
       generator_ref:
         description: Generator version branch or commit to validate
-        default: 6d7ae2281826ed4b1877ba330ade91f14a87f796
+        default: 85ee2dfce53501ac7bf80cb9e4920b12794ec0e6
       sdk_ref:
         description: SDK version branch or commit to validate
-        default: 54237009fd7b1ca2a727834e26c2f5ac77cb996f
+        default: 2472730b6503d4c82ec752ca491489720bde18fd
 permissions:
   contents: read
 jobs:
@@ -27,17 +27,17 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: ofidj/generator-fidj
-          ref: ${{ inputs.generator_ref || '6d7ae2281826ed4b1877ba330ade91f14a87f796' }}
+          ref: ${{ inputs.generator_ref || '85ee2dfce53501ac7bf80cb9e4920b12794ec0e6' }}
           path: generator
       - uses: actions/checkout@v4
         with:
           repository: ofidj/fidj-node
-          ref: ${{ inputs.sdk_ref || '54237009fd7b1ca2a727834e26c2f5ac77cb996f' }}
+          ref: ${{ inputs.sdk_ref || '2472730b6503d4c82ec752ca491489720bde18fd' }}
           path: sdk
       - uses: actions/checkout@v4
         with:
           repository: ofidj/fidj-api-contracts
-          ref: 8beb6a32f2a1f2c2d3df07558fb3c4a5fc7d99b3
+          ref: 4eaaf13ac56b827e6b0d6636ba7128e71125b141
           path: contracts
       - uses: actions/setup-node@v4
         with:
