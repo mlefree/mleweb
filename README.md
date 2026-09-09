@@ -45,3 +45,5 @@ This static app stores its session in this browser and has no separate user-cont
 The generated content app opens on `/#/signin`. Sign in to open `/#/content`, containing the supplied HTML. Signed-in users can open **My privacy** separately. Sign-out and departure return to the sign-in screen. Anonymous content is public; this navigation flow is not a security boundary for static assets.
 
 Anonymous entry is disabled for mleweb with `--anonymous false` in the `create` command. Other builders can enable it with `--anonymous true` (the generator default). This is a navigation preference, not access control for static source assets.
+
+Account recovery and verification are generated from the same entry as Fidj: Forgot password, one-use reset, explicit email confirmation, and My account status/resend. CI builds the coordinated contracts and SDK before generating the site; no handwritten account UI lives in this repository.
