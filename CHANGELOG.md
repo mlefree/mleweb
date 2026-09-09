@@ -2,6 +2,8 @@
 
 ## 3.3.7 — Unreleased
 
+- Configure anonymous entry with `--anonymous true|false`; mleweb explicitly disables it.
+
 - Restore the login-first flow: sign-in or explicit anonymous entry opens Content, with privacy in a separate view.
 
 - Replace Travis with GitHub Actions clean generation/build/tests on Node 22/24.

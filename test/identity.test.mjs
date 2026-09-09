@@ -17,8 +17,14 @@ test("the public CLI produces Mat Cloud App as a static website with its origina
   const js = await readFile(root + "main.js", "utf8");
   assert.doesNotMatch(js, /fetch\("\/api\//);
   assert.match(js, /Create an account/);
-  assert.match(js, /Enter anonymously/);
-  assert.doesNotMatch(js, /local-member-only|local-demo-only|Local accounts|Try a local demo/);
+  const config = JSON.parse(
+    await readFile(".gen/mleweb/app.config.json", "utf8"),
+  );
+  assert.equal(config.allowAnonymous, false);
+  assert.doesNotMatch(
+    js,
+    /local-member-only|local-demo-only|Local accounts|Try a local demo/,
+  );
   assert.match(js, /hashchange/);
   assert.match(js, /Export my app data/);
   assert.match(js, /Leave this app/);
