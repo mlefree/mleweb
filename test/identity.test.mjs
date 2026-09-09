@@ -6,6 +6,8 @@ test("the public CLI produces Mat Cloud App as a static website with its origina
   const html = await readFile(root + "index.html", "utf8");
   assert.match(html, /<title>Mat Cloud App<\/title>/);
   assert.match(html, /Welcome in my Cloud/);
+  assert.match(html, /<template id="public-content">/);
+  assert.match(html, /<div id="app" aria-live="polite"><\/div>/);
   assert.match(html, /Retro_Mario_in_3D_flavor_by_cezkid.gif/);
   assert.match(html, /https:\/\/blog.mlefree.com\/p\/about.html/);
   assert.match(html, /https:\/\/github.com\/ofidj/);
@@ -15,6 +17,9 @@ test("the public CLI produces Mat Cloud App as a static website with its origina
   const js = await readFile(root + "main.js", "utf8");
   assert.doesNotMatch(js, /fetch\("\/api\//);
   assert.match(js, /Create an account/);
+  assert.match(js, /Enter anonymously/);
+  assert.doesNotMatch(js, /local-member-only|local-demo-only|Local accounts|Try a local demo/);
+  assert.match(js, /hashchange/);
   assert.match(js, /Export my app data/);
   assert.match(js, /Leave this app/);
   assert.ok(!(await readdir(root)).some((name) => name.startsWith(".env")));

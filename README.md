@@ -26,7 +26,7 @@ npm run build:local
 npm start
 ```
 
-Open http://localhost:8201. Public content is visible without an account. Sign in, inspect current roles, toggle a preference, export app-scoped data or confirm departure. The About me link opens the original CV page; no CV copy is maintained here.
+Open http://localhost:8201. Choose Enter anonymously on the initial login screen to view content without an account. Sign in, inspect current roles, toggle a preference, export app-scoped data or confirm departure. The About me link opens the original CV page; no CV copy is maintained here.
 
 Start the local Fidj API/console with `python3 scripts/local-stack.py start` from the Ofidj workspace. Local builds select `fidj-local-mleweb`, API port 3201 and console port 4200. Alex (`alex@fidj.local` / `local-demo-only`) owns the app; Maya (`maya@fidj.local` / `local-member-only`) is a member. Use the console to change roles, then refresh access here. Studio Notes at port 8200 separately demonstrates role-protected backend actions.
 
@@ -39,3 +39,7 @@ Review the `create` script, regenerate from scratch, inspect the local app and c
 ## Scope
 
 This static app stores its session in this browser and has no separate user-content database. Exports and departure cover the selected app's records held by Fidj. Pending cleanup is shown as pending. The example agreement must be replaced with the app owner's actual terms before release. CLI HTML is trusted developer-authored source, not visitor input.
+
+## Entry flow
+
+The generated content app opens on `/#/signin`. Sign in or choose **Enter anonymously** to open `/#/content`, containing the supplied HTML. Signed-in users can open **My privacy** separately. Sign-out and departure return to the sign-in screen. Anonymous content is public; this navigation flow is not a security boundary for static assets.
