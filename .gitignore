@@ -1,9 +1,0 @@
-# Logs
-logs
-*.log
-.env
-dist
-.vscode
-.idea
-.DS_Store
-*gitignored*
