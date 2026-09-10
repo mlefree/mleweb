@@ -8,6 +8,10 @@ on:
       generator_ref:
         description: Generator version branch or commit to validate
         default: ac5697ace0b04917cec887ab364a6a01fc82940a
+      publish:
+        description: Publish the generated site to gh-pages (mlefree.com)
+        type: boolean
+        default: false
       sdk_ref:
         description: SDK version branch or commit to validate
         default: 06a02d92529b2e6b158a969fd187430ea7c1a6f2
@@ -69,3 +73,41 @@ jobs:
             mleweb/.gen/mleweb/dist
             mleweb/.gen/mleweb/www
             mleweb/.gen/mleweb/README.md
+
+  publish-pages:
+    # mlefree.com serves the gh-pages branch. Publishing is deliberate: it happens
+    # on master, or on an explicit dispatch, never from a version branch -- those
+    # only validate.
+    needs: generate-build-test
+    if: >-
+      (github.event_name == 'push' && github.ref == 'refs/heads/master') ||
+      (github.event_name == 'workflow_dispatch' && inputs.publish)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: mleweb-node-22
+          path: generated
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: pages
+      - name: Replace the published site with the generated one
+        run: |
+          set -euo pipefail
+          test -f generated/www/index.html
+          test -s generated/www/CNAME
+          find pages -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp -R generated/www/. pages/
+          cd pages
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --staged --quiet; then
+            echo "Published site already up to date"
+          else
+            git commit -m "Publish generated mlefree.com from ${GITHUB_SHA}"
+            git push
+          fi
