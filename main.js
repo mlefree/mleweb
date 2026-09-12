@@ -9810,7 +9810,7 @@
   // app.config.json
   var app_config_default = {
     appId: "fidj-d204854971e704b9",
-    oidcIssuer: null,
+    oidcIssuer: "https://api.fidj.ovh/oidc",
     apiEndpoint: "https://api.fidj.ovh/v3",
     dashboardUrl: "https://fidj.ovh",
     title: "Mat Cloud App",
