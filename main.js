@@ -9823,20 +9823,28 @@
   };
 
   // src/version.ts
-  function showVersionBadge(version) {
+  function showVersionBadge(version, apiEndpoint) {
     if (!/^\d{2}\.\d{2}\.\d{2}$/.test(version || "")) return;
     const badge = document.createElement("div");
     badge.className = "fidj-version";
     badge.setAttribute("aria-label", `App version ${version}`);
     badge.textContent = `v${version}`;
     document.body.append(badge);
+    if (apiEndpoint) {
+      void fetch(`${apiEndpoint.replace(/\/$/, "")}/status`).then((response) => response.ok ? response.json() : null).then((status) => {
+        const apiVersion = status?.version || status?.built;
+        if (!apiVersion) return;
+        badge.textContent = `v${version} \xB7 API ${apiVersion}`;
+        badge.setAttribute("aria-label", `App version ${version}, API version ${apiVersion}`);
+      }).catch(() => void 0);
+    }
   }
 
   // src/content.ts
   var sdk = new import_node.FidjNodeService();
   var oidc = app_config_default.oidcIssuer ? new import_node.FidjOidcClient({ issuer: app_config_default.oidcIssuer, clientId: app_config_default.appId, redirectUri: window.location.origin + window.location.pathname, apiEndpoint: app_config_default.apiEndpoint, storage: sessionStorage }) : null;
   var root = document.querySelector("#app");
-  showVersionBadge(app_config_default.releaseVersion);
+  showVersionBadge(app_config_default.releaseVersion, app_config_default.title === "Fidj" ? app_config_default.apiEndpoint : void 0);
   var appPath = `/me/apps/${encodeURIComponent(app_config_default.appId)}`;
   var signedIn = false;
   var emailVerified = false;
