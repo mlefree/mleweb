@@ -8437,10 +8437,16 @@
       };
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.Client = void 0;
+      exports.readableClientInfo = readableClientInfo;
       var Ajax_1 = require_Ajax();
       var tools = __importStar(require_tools());
       var sdk_1 = require_sdk();
       var ClientTokens_1 = require_ClientTokens();
+      function readableClientInfo(userAgent) {
+        const browser = /Edg\//.test(userAgent) ? "Edge" : /Firefox\//.test(userAgent) ? "Firefox" : /Chrome\//.test(userAgent) ? "Chrome" : /Safari\//.test(userAgent) ? "Safari" : "Browser";
+        const device = /iPhone/.test(userAgent) ? "iPhone" : /iPad/.test(userAgent) ? "iPad" : /Android/.test(userAgent) ? "Android" : /Macintosh|Mac OS X/.test(userAgent) ? "macOS" : /Windows/.test(userAgent) ? "Windows" : /Linux/.test(userAgent) ? "Linux" : "unknown device";
+        return `${browser} on ${device}`;
+      }
       var Client = class _Client {
         constructor(appId, URI, storage, sdk2, logger) {
           this.appId = appId;
@@ -8454,7 +8460,7 @@
           let uuid = this.storage.get(this._clientUuid) || "uuid-" + Math.random();
           let info = "_clientInfo";
           if (typeof window !== "undefined" && window.navigator) {
-            info = window.navigator.appName + "@" + window.navigator.appVersion + "-" + window.navigator.userAgent;
+            info = readableClientInfo(window.navigator.userAgent);
           }
           if (typeof window !== "undefined" && window["device"] && window["device"].uuid) {
             uuid = window["device"].uuid;
