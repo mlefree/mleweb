@@ -9809,7 +9809,7 @@
 
   // app.config.json
   var app_config_default = {
-    appId: "fidj-f46d11011e19ef90",
+    appId: "fidj-d204854971e704b9",
     oidcIssuer: null,
     apiEndpoint: "https://api.fidj.ovh/v3",
     dashboardUrl: "https://fidj.ovh",
@@ -9817,13 +9817,13 @@
     releaseVersion: "26.09.12",
     localDemo: false,
     allowAnonymous: false,
-    welcome: "Welcome in my Cloud",
-    description: "A space to explore, with an account that puts you in control.",
+    welcome: "Bienvenue dans Mat Cloud",
+    description: "Mon actualit\xE9, mes projets.",
     content: "<img src=https://3.bp.blogspot.com/-vX0tnGUE4j4/V7xOTtIm6rI/AAAAAAAABKI/xvKjK_Mx0QoKd9Ew3EF_e70_JFr0VQJ7wCK4B/s920/Retro_Mario_in_3D_flavor_by_cezkid.gif /><br><br>About <a href='https://blog.mlefree.com/p/about.html'>me</a><br>Work with me on <a href='https://github.com/ofidj'>fidj</a> or feel free to contact<br><a href='https://twitter.com/mat_cloud'>twitter</a> - hello@mlefree.com<br>",
     highlights: [],
     badges: [],
-    logo: "./fidj-logo.png",
-    favicon: "./fidj-logo.png",
+    logo: "./brand/logo.gif",
+    favicon: "./brand/favicon.gif",
     moduleEntry: "",
     domain: "mlefree.com"
   };
