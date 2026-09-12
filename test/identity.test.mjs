@@ -16,11 +16,18 @@ test("the public CLI produces Mat Cloud App as a static website with its origina
   assert.equal((await readFile(root + "CNAME", "utf8")).trim(), "mlefree.com");
   const js = await readFile(root + "main.js", "utf8");
   assert.doesNotMatch(js, /fetch\("\/api\//);
-  assert.match(js, /Create an account/);
   const config = JSON.parse(
     await readFile(".gen/mleweb/app.config.json", "utf8"),
   );
-  assert.equal(config.appId, "fidj-d204854971e704b9");
+  // A local build is generated against the loopback API and its provider; a
+  // released one against the hosted pair. Either way the site signs in through
+  // Fidj, so the password is never typed on mlefree.com, and creating an
+  // account is offered by Fidj rather than by this site.
+  assert.equal(config.appId, process.env.FIDJ_APP_ID || "fidj-d204854971e704b9");
+  assert.equal(
+    config.oidcIssuer,
+    new URL("/oidc", config.apiEndpoint).href,
+  );
   assert.equal(config.allowAnonymous, false);
   assert.deepEqual(
     await readFile(root + "brand/logo.gif"),

@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.3.10 — Unreleased
+
+- Sign in through the Fidj provider: the site shows a single *Continue with
+  Fidj* button and never receives a Fidj password. Requires the app's callback
+  `https://mlefree.com/` to be registered first, or the provider refuses the
+  authorization.
+
 ## 3.3.7 — Unreleased
 
 - Configure anonymous entry with `--anonymous true|false`; mleweb explicitly disables it.
