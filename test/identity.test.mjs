@@ -5,7 +5,7 @@ test("the public CLI produces Mat Cloud App as a static website with its origina
   const root = ".gen/mleweb/www/";
   const html = await readFile(root + "index.html", "utf8");
   assert.match(html, /<title>Mat Cloud App<\/title>/);
-  assert.match(html, /Welcome in my Cloud/);
+  assert.match(html, /Bienvenue dans Mat Cloud/);
   assert.match(html, /<template id="public-content">/);
   assert.match(html, /<div id="app" aria-live="polite"><\/div>/);
   assert.match(html, /Retro_Mario_in_3D_flavor_by_cezkid.gif/);
@@ -20,7 +20,18 @@ test("the public CLI produces Mat Cloud App as a static website with its origina
   const config = JSON.parse(
     await readFile(".gen/mleweb/app.config.json", "utf8"),
   );
+  assert.equal(config.appId, "fidj-d204854971e704b9");
   assert.equal(config.allowAnonymous, false);
+  assert.deepEqual(
+    await readFile(root + "brand/logo.gif"),
+    await readFile("brand/mario.gif"),
+  );
+  assert.deepEqual(
+    await readFile(root + "brand/favicon.gif"),
+    await readFile("brand/mario.gif"),
+  );
+  assert.match(html, /href="\.\/brand\/favicon\.gif"/);
+  assert.match(html, /src="\.\/brand\/logo\.gif"/);
   assert.doesNotMatch(
     js,
     /local-member-only|local-demo-only|Local accounts|Try a local demo/,
