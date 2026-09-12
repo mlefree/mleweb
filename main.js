@@ -9739,7 +9739,7 @@
 
   // src/service-agreement.ts
   function agreementMarkup() {
-    return `<div class="signin-agreement"><label class="agreement-choice"><input id="service-agreement" type="checkbox" aria-required="true" disabled><span id="agreement-label">I accept the service agreement for this app.</span></label><button type="button" id="read-agreement" disabled>Read service agreement</button><p id="agreement-status" class="fineprint" role="status">Loading service agreement\u2026</p></div><dialog id="agreement-dialog" aria-labelledby="agreement-heading"><h2 id="agreement-heading">Service agreement</h2><p id="agreement-version"></p><p id="agreement-text"></p><button type="button" id="close-agreement">Close agreement</button></dialog>`;
+    return `<div class="signin-agreement"><label class="agreement-choice"><input id="service-agreement" type="checkbox" aria-required="true" disabled><span id="agreement-label">I accept the service agreement for this app.</span></label><button type="button" id="read-agreement" disabled>Read service agreement</button><p id="agreement-status" class="fineprint" role="status">Loading service agreement\u2026</p><button type="button" id="retry-agreement" hidden>Retry</button></div><dialog id="agreement-dialog" aria-labelledby="agreement-heading"><h2 id="agreement-heading">Service agreement</h2><p id="agreement-version"></p><p id="agreement-text"></p><button type="button" id="close-agreement">Close agreement</button></dialog>`;
   }
   function acceptedAgreement(form) {
     const checkbox = form.querySelector("#service-agreement");
@@ -9761,6 +9761,7 @@
     const read = form.querySelector("#read-agreement");
     const dialog = form.querySelector("#agreement-dialog");
     const status = form.querySelector("#agreement-status");
+    const retry = form.querySelector("#retry-agreement");
     const submitButtons = form.querySelectorAll('button[type="submit"]');
     const update = () => submitButtons.forEach((button) => {
       button.disabled = checkbox.disabled;
@@ -9770,23 +9771,31 @@
     checkbox.addEventListener("change", update);
     read.addEventListener("click", () => dialog.showModal());
     form.querySelector("#close-agreement").addEventListener("click", () => dialog.close());
-    try {
-      const response = await fetch(`${endpoint}/apps/${encodeURIComponent(appId)}`, { signal: AbortSignal.timeout(1e4) });
-      if (!response.ok) throw new Error("Agreement unavailable");
-      const agreement = (await response.json()).app?.agreement;
-      if (!agreement || typeof agreement.version !== "string" || !agreement.version || typeof agreement.text !== "string" || !agreement.text) throw new Error("Agreement unavailable");
-      if (!form.isConnected) return;
-      checkbox.dataset.version = agreement.version;
-      checkbox.disabled = false;
-      checkbox.checked = checked;
-      read.disabled = false;
-      dialog.querySelector("#agreement-version").textContent = `Version ${agreement.version}`;
-      dialog.querySelector("#agreement-text").textContent = agreement.text;
-      status.textContent = "Required to sign in. Optional data choices stay separate.";
-      update();
-    } catch {
-      if (form.isConnected) status.textContent = "The service agreement could not be loaded. Reload this page to try again.";
-    }
+    const load = async () => {
+      retry.hidden = true;
+      status.textContent = "Loading service agreement\u2026";
+      try {
+        const response = await fetch(`${endpoint}/apps/${encodeURIComponent(appId)}`, { signal: AbortSignal.timeout(1e4) });
+        if (!response.ok) throw new Error(response.status === 404 ? "missing" : "unreachable");
+        const agreement = (await response.json()).app?.agreement;
+        if (!agreement || typeof agreement.version !== "string" || !agreement.version || typeof agreement.text !== "string" || !agreement.text) throw new Error("missing");
+        if (!form.isConnected) return;
+        checkbox.dataset.version = agreement.version;
+        checkbox.disabled = false;
+        checkbox.checked = checked;
+        read.disabled = false;
+        dialog.querySelector("#agreement-version").textContent = `Version ${agreement.version}`;
+        dialog.querySelector("#agreement-text").textContent = agreement.text;
+        status.textContent = "Required to sign in. Optional data choices stay separate.";
+        update();
+      } catch (error) {
+        if (!form.isConnected) return;
+        status.textContent = error instanceof Error && error.message === "missing" ? "This app has no service agreement available." : "We cannot reach Fidj right now. Try again.";
+        retry.hidden = false;
+      }
+    };
+    retry.addEventListener("click", load);
+    await load();
   }
 
   // src/content.ts
@@ -9799,6 +9808,7 @@
     apiEndpoint: "https://api.fidj.ovh/v3",
     dashboardUrl: "https://fidj.ovh",
     title: "Mat Cloud App",
+    releaseVersion: "26.09.12",
     localDemo: false,
     allowAnonymous: false,
     welcome: "Welcome in my Cloud",
@@ -9812,10 +9822,21 @@
     domain: "mlefree.com"
   };
 
+  // src/version.ts
+  function showVersionBadge(version) {
+    if (!/^\d{2}\.\d{2}\.\d{2}$/.test(version || "")) return;
+    const badge = document.createElement("div");
+    badge.className = "fidj-version";
+    badge.setAttribute("aria-label", `App version ${version}`);
+    badge.textContent = `v${version}`;
+    document.body.append(badge);
+  }
+
   // src/content.ts
   var sdk = new import_node.FidjNodeService();
   var oidc = app_config_default.oidcIssuer ? new import_node.FidjOidcClient({ issuer: app_config_default.oidcIssuer, clientId: app_config_default.appId, redirectUri: window.location.origin + window.location.pathname, apiEndpoint: app_config_default.apiEndpoint, storage: sessionStorage }) : null;
   var root = document.querySelector("#app");
+  showVersionBadge(app_config_default.releaseVersion);
   var appPath = `/me/apps/${encodeURIComponent(app_config_default.appId)}`;
   var signedIn = false;
   var emailVerified = false;
