@@ -17,7 +17,7 @@ npm run build
 
 The result is `.gen/mleweb/www`, including `CNAME` set to `mlefree.com`. It can be served by a static host. Sign-in and privacy calls go directly to Fidj using the generated client. The bundled Node server is an optional local preview, not a production hosting requirement for this content app.
 
-Production generation retains public app ID `fidj-f46d11011e19ef90` and `https://api.fidj.ovh/v3`. Build/tests do not log into production. This generation workflow does not publish the hosted website.
+Production generation retains public app ID `fidj-f46d11011e19ef90` and `https://api.fidj.ovh/v3`. Build/tests do not log into production. A successful `master` workflow publishes the generated `www` artifact to `gh-pages`, which serves mlefree.com.
 
 ## Validate locally
 
@@ -32,7 +32,7 @@ Start the local Fidj API/console with `python3 scripts/local-stack.py start` fro
 
 ## GitHub CI and acceptance
 
-GitHub Actions replaces Travis and runs `npm ci && npm test` on Node 22/24. It builds the pinned SDK and generator revisions, calls the same public generation command, checks the supplied identity and static artifact, and runs generated HTTP authorization/privacy tests. Uploaded artifacts contain `www` and the optional server build, without `.env`. CI does not deploy mlefree.com.
+GitHub Actions replaces Travis and runs `npm ci && npm test` on Node 22/24. It builds the pinned SDK and generator revisions, calls the same public generation command, checks the supplied identity and static artifact, and runs generated HTTP authorization/privacy tests. Uploaded artifacts contain `www` and the optional server build, without `.env`. After both Node variants pass on `master`, CI publishes the Node 22 `www` artifact to `gh-pages` and therefore deploys mlefree.com. This publication is a required final step of a Fidj sandbox release.
 
 Review the `create` script, regenerate from scratch, inspect the local app and check the green CI matrix before accepting a generator change. The matching unreleased SDK/generator commits are pinned in the workflow; a registry-only release still requires publishing their coordinated versions.
 
