@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.3.13 — Unreleased
+
+- Build on generator 1.2.0: the sign-in entry explains that Mat Cloud App
+  accounts are Fidj accounts before offering its button, offers to continue as
+  whoever last signed in on this browser, and says what signing out did.
+
 ## 3.3.12 — Unreleased
 
 - Build on generator 1.1.0 and SDK 3.6.29: Back now moves between the site's own
