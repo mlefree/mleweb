@@ -9781,6 +9781,7 @@
   async function bindAgreement(form, title, endpoint, appId, checked = false) {
     if (!form) return;
     const checkbox = form.querySelector("#service-agreement");
+    if (!checkbox) return;
     const read = form.querySelector("#read-agreement");
     const dialog = form.querySelector("#agreement-dialog");
     const status = form.querySelector("#agreement-status");
@@ -9849,7 +9850,7 @@
     const both = Boolean(credentials);
     const lead = hint ? `<p class="signin-lead">You signed in here with Fidj before. ${escapeText(title)} accounts are Fidj accounts \u2014 continue as yourself, or use another.</p>` : both ? `<p class="signin-lead">${escapeText(title)} accounts are Fidj accounts. Sign in below, or let Fidj do it on its own page \u2014 where this site never sees your password.</p>` : isFidjItself2 ? `<p class="signin-lead">One account across every app that uses Fidj, and a separate set of choices for each one. Sign in, or create yours, on the next screen.</p>` : `<p class="signin-lead">${escapeText(title)} accounts are Fidj accounts. You will sign in \u2014 or create yours \u2014 on Fidj's own page, so this site never sees your password.</p>`;
     const fidj = hint ? `<button class="primary" type="submit" name="entry" value="fidj">Continue as ${escapeText(hint)}</button><button type="button" id="forget-hint" class="quiet">Use a different account</button>` : `<button class="${both ? "secondary" : "primary"}" type="submit" name="entry" value="fidj">${isFidjItself2 ? "Sign in" : "Sign in with Fidj"}</button>`;
-    if (!both) return lead + agreementMarkup() + fidj;
+    if (!both) return lead + fidj;
     const divider = `<div class="signin-divider"><span>or</span></div>`;
     return hint ? lead + agreementMarkup() + fidj + divider + credentials : lead + agreementMarkup() + credentials + divider + fidj;
   }
@@ -10233,15 +10234,15 @@
       signInPassword = password;
       signInAgreementAccepted = agreement?.checked === true;
       const acceptance = acceptedAgreement(event.currentTarget);
-      if (!acceptance) {
+      const submitter = event.submitter;
+      const signup = submitter?.name === "signup";
+      const throughFidj = submitter?.name === "entry" && submitter.value === "fidj";
+      if (!throughFidj && !acceptance) {
         failed = true;
         message = "Please accept the service agreement before continuing.";
         render();
         return;
       }
-      const submitter = event.submitter;
-      const signup = submitter?.name === "signup";
-      const throughFidj = submitter?.name === "entry" && submitter.value === "fidj";
       void action(async () => {
         if (oidc && throughFidj) {
           window.location.assign(await oidc.beginLogin());
