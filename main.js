@@ -6959,12 +6959,19 @@
         session() {
           return JSON.parse(this.options.storage.getItem(this.prefix + ".session") || "null");
         }
+        // No `prompt` by default: sending `login consent` asked the provider to
+        // ignore the session and the grant it is configured to keep, so every app
+        // re-collected a password a person had just typed for another one. `silent`
+        // asks for an answer without a screen (it comes back as an error when the
+        // person is not signed in); `prompt` stays available for a step-up check an
+        // app decides it needs.
         beginLogin() {
-          return __awaiter(this, void 0, void 0, function* () {
+          return __awaiter(this, arguments, void 0, function* (options = {}) {
             const as = yield this.discovery(), verifier = oauth.generateRandomCodeVerifier(), state = oauth.generateRandomState(), nonce = oauth.generateRandomNonce();
             this.options.storage.setItem(this.prefix + ".transaction", JSON.stringify({ verifier, state, nonce, createdAt: Date.now() }));
+            const prompt = options.silent ? "none" : options.prompt;
             const url = new URL(as.authorization_endpoint);
-            url.search = new URLSearchParams({ client_id: this.options.clientId, redirect_uri: this.options.redirectUri, response_type: "code", scope: "openid profile email offline_access fidj:api", prompt: "login consent", state, nonce, code_challenge: yield oauth.calculatePKCECodeChallenge(verifier), code_challenge_method: "S256" }).toString();
+            url.search = new URLSearchParams(Object.assign(Object.assign({ client_id: this.options.clientId, redirect_uri: this.options.redirectUri, response_type: "code", scope: "openid profile email offline_access fidj:api" }, prompt ? { prompt } : {}), { state, nonce, code_challenge: yield oauth.calculatePKCECodeChallenge(verifier), code_challenge_method: "S256" })).toString();
             return url.href;
           });
         }
@@ -6975,6 +6982,9 @@
             const expected = new URL(this.options.redirectUri);
             if (!transaction || Date.now() - transaction.createdAt > 6e5 || callback.origin !== expected.origin || callback.pathname !== expected.pathname)
               throw new Error("Login transaction expired or callback mismatch");
+            const refusal = callback.searchParams.get("error");
+            if (refusal)
+              throw Object.assign(new Error(callback.searchParams.get("error_description") || refusal), { code: refusal, silentRefusal: ["login_required", "consent_required", "interaction_required", "account_selection_required"].includes(refusal) });
             const as = yield this.discovery(), client = { client_id: this.options.clientId };
             const params = oauth.validateAuthResponse(as, client, callback, transaction.state);
             const response = yield oauth.authorizationCodeGrantRequest(as, client, oauth.None(), params, this.options.redirectUri, transaction.verifier, this.network());
@@ -7469,7 +7479,7 @@
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.bpInfo = void 0;
-      exports.bpInfo = { version: "v3.6.26" };
+      exports.bpInfo = { version: "v3.6.28" };
     }
   });
 
@@ -9814,7 +9824,7 @@
     apiEndpoint: "https://api.fidj.ovh/v3",
     dashboardUrl: "https://fidj.ovh",
     title: "Mat Cloud App",
-    releaseVersion: "26.09.12",
+    releaseVersion: "26.09.13",
     localDemo: false,
     allowAnonymous: false,
     welcome: "Bienvenue dans Mat Cloud",
