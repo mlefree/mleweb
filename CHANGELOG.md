@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.3.12 — Unreleased
+
+- Build on generator 1.1.0 and SDK 3.6.29: Back now moves between the site's own
+  screens instead of leaving it, and a sign-out that the server refuses no
+  longer reports a failure over a success.
+
 ## 3.3.11 — Unreleased
 
 - Build against SDK 3.6.28, so *Continue with Fidj* reuses an existing Fidj
