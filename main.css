@@ -1188,4 +1188,20 @@ summary:focus-visible {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+.signin-lead {
+  margin: 0 0 18px;
+  color: var(--fidj-ink-soft, inherit);
+  line-height: 1.5;
+}
+button.quiet {
+  margin-top: 10px;
+  background: none;
+  border: none;
+  color: inherit;
+  text-decoration: underline;
+  padding: 6px 0;
+  font: inherit;
+  cursor: pointer;
+  width: auto;
+}
 /*# sourceMappingURL=main.css.map */

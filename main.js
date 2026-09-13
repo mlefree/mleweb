@@ -9820,6 +9820,36 @@
     retry.addEventListener("click", load);
     await load();
   }
+  var hintKey = (appId) => "fidj.entry." + appId;
+  function signInHint(appId) {
+    try {
+      return localStorage.getItem(hintKey(appId)) || "";
+    } catch {
+      return "";
+    }
+  }
+  function rememberSignIn(appId, label) {
+    try {
+      if (label) localStorage.setItem(hintKey(appId), label);
+    } catch {
+    }
+  }
+  function forgetSignIn(appId) {
+    try {
+      localStorage.removeItem(hintKey(appId));
+    } catch {
+    }
+  }
+  function providerEntry(title, appId) {
+    const escapeText = (value) => String(value ?? "").replace(
+      /[&<>"']/g,
+      (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]
+    );
+    const hint = signInHint(appId);
+    const lead = hint ? `<p class="signin-lead">You signed in here with Fidj before. ${escapeText(title)} accounts are Fidj accounts, and this site never sees your password \u2014 you can also create or use another one.</p>` : `<p class="signin-lead">${escapeText(title)} accounts are Fidj accounts. You will sign in \u2014 or create yours \u2014 on Fidj's own page, so this site never sees your password.</p>`;
+    const action2 = hint ? `<button class="primary" type="submit">Continue as ${escapeText(hint)}</button><button type="button" id="forget-hint" class="quiet">Use a different account</button>` : `<button class="primary" type="submit">Sign in with Fidj</button>`;
+    return lead + agreementMarkup() + action2;
+  }
 
   // src/content.ts
   var import_node = __toESM(require_dist2(), 1);
@@ -9907,8 +9937,13 @@
     if (!entries?.length) return "";
     return `<footer class="signin-badges">${entries.map((entry) => `<span>${escape(entry)}</span>`).join("")}</footer>`;
   }
+  var leftTheApp = false;
   function banner() {
-    return message ? `<p role="${failed ? "alert" : "status"}" class="${failed ? "error" : "notice"}">${escape(message)}</p>` : "";
+    if (!message) return "";
+    const role = failed ? "alert" : "status";
+    const kind = failed ? "error" : "notice";
+    const finish = leftTheApp ? ` <a href="${escape(app_config_default.dashboardUrl)}/#/my/profile" target="_blank" rel="noopener">Sign out of Fidj too</a>` : "";
+    return `<p role="${role}" class="${kind}">${escape(message)}${finish}</p>`;
   }
   function appNav(current) {
     const tab = (id, label, selected) => `<button id="${id}"${selected ? ' class="selected" aria-current="page"' : ""}>${label}</button>`;
@@ -9924,9 +9959,15 @@
     element("exit")?.addEventListener(
       "click",
       () => void action(async () => {
+        const wasSignedIn = signedIn;
         if (signedIn) await sdk.logout(true);
+        forgetSignIn(app_config_default.appId);
         signedIn = false;
         anonymous = false;
+        if (wasSignedIn) {
+          leftTheApp = true;
+          message = `Signed out of ${app_config_default.title}. You are still signed in to Fidj.`;
+        }
         navigate("signin");
       })
     );
@@ -9968,8 +10009,10 @@
       request(appPath + "/consents"),
       request(appPath + "/consents/history").then((result) => result.history)
     ]);
-    emailVerified = (await request("/me")).user?.verified === true;
+    const me = (await request("/me")).user;
+    emailVerified = me?.verified === true;
     signedIn = true;
+    rememberSignIn(app_config_default.appId, String(me?.poc?.email || me?.username || ""));
   }
   async function action(task) {
     if (busy) return;
@@ -9981,7 +10024,10 @@
     const submit = root.querySelector("button.primary");
     if (submit) submit.textContent = "Please wait\u2026";
     failed = false;
-    if (initialized) message = "";
+    if (initialized) {
+      message = "";
+      leftTheApp = false;
+    }
     try {
       await task();
     } catch (error) {
@@ -10120,7 +10166,12 @@
       anonymous = true;
       navigate("content");
     });
-    if (oidc && element("signin")) element("signin").innerHTML = agreementMarkup() + '<p>Continue securely with your Fidj account. Your password stays with Fidj.</p><button class="primary" type="submit">Continue with Fidj</button>';
+    if (oidc && element("signin"))
+      element("signin").innerHTML = providerEntry(app_config_default.title, app_config_default.appId);
+    element("forget-hint")?.addEventListener("click", () => {
+      forgetSignIn(app_config_default.appId);
+      render();
+    });
     void bindAgreement(element("signin"), app_config_default.title, app_config_default.apiEndpoint, app_config_default.appId, signInAgreementAccepted);
     element("signin")?.addEventListener("submit", (event) => {
       event.preventDefault();
@@ -10158,8 +10209,11 @@
       "click",
       () => void action(async () => {
         await sdk.logout(true);
+        forgetSignIn(app_config_default.appId);
         signedIn = false;
         anonymous = false;
+        leftTheApp = true;
+        message = `Signed out of ${app_config_default.title}. You are still signed in to Fidj.`;
         navigate("signin");
       })
     );
