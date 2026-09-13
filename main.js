@@ -9840,15 +9840,18 @@
     } catch {
     }
   }
-  function providerEntry(title, appId) {
+  function providerEntry(title, appId, credentials) {
     const escapeText = (value) => String(value ?? "").replace(
       /[&<>"']/g,
       (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]
     );
     const hint = signInHint(appId);
-    const lead = hint ? `<p class="signin-lead">You signed in here with Fidj before. ${escapeText(title)} accounts are Fidj accounts, and this site never sees your password \u2014 you can also create or use another one.</p>` : `<p class="signin-lead">${escapeText(title)} accounts are Fidj accounts. You will sign in \u2014 or create yours \u2014 on Fidj's own page, so this site never sees your password.</p>`;
-    const action2 = hint ? `<button class="primary" type="submit">Continue as ${escapeText(hint)}</button><button type="button" id="forget-hint" class="quiet">Use a different account</button>` : `<button class="primary" type="submit">Sign in with Fidj</button>`;
-    return lead + agreementMarkup() + action2;
+    const both = Boolean(credentials);
+    const lead = hint ? `<p class="signin-lead">You signed in here with Fidj before. ${escapeText(title)} accounts are Fidj accounts \u2014 continue as yourself, or use another.</p>` : both ? `<p class="signin-lead">${escapeText(title)} accounts are Fidj accounts. Sign in below, or let Fidj do it on its own page \u2014 where this site never sees your password.</p>` : `<p class="signin-lead">${escapeText(title)} accounts are Fidj accounts. You will sign in \u2014 or create yours \u2014 on Fidj's own page, so this site never sees your password.</p>`;
+    const fidj = hint ? `<button class="primary" type="submit" name="entry" value="fidj">Continue as ${escapeText(hint)}</button><button type="button" id="forget-hint" class="quiet">Use a different account</button>` : `<button class="${both ? "secondary" : "primary"}" type="submit" name="entry" value="fidj">Sign in with Fidj</button>`;
+    if (!both) return lead + agreementMarkup() + fidj;
+    const divider = `<div class="signin-divider"><span>or</span></div>`;
+    return hint ? lead + agreementMarkup() + fidj + divider + credentials : lead + agreementMarkup() + credentials + divider + fidj;
   }
 
   // src/content.ts
@@ -9864,6 +9867,7 @@
     releaseVersion: "26.09.13",
     localDemo: false,
     allowAnonymous: false,
+    ownCredentials: true,
     welcome: "Bienvenue dans Mat Cloud",
     description: "Mon actualit\xE9, mes projets.",
     content: "<img src=https://3.bp.blogspot.com/-vX0tnGUE4j4/V7xOTtIm6rI/AAAAAAAABKI/xvKjK_Mx0QoKd9Ew3EF_e70_JFr0VQJ7wCK4B/s920/Retro_Mario_in_3D_flavor_by_cezkid.gif /><br><br>About <a href='https://blog.mlefree.com/p/about.html'>me</a><br>Work with me on <a href='https://github.com/ofidj'>fidj</a> or feel free to contact<br><a href='https://twitter.com/mat_cloud'>twitter</a> - hello@mlefree.com<br>",
@@ -10059,6 +10063,9 @@
     if (route !== currentRoute()) window.history.pushState(null, "", "#/" + route);
     if (!busy) render();
   }
+  function credentialFields() {
+    return `<label for="email">Email</label><input id="email" type="email" value="${escape(signInEmail)}" placeholder="you@company.com" autocomplete="username"><div class="field-head"><label for="password">Password</label><a href="#/forgot">Forgot?</a></div><div class="password-field"><input id="password" type="password" value="${escape(signInPassword)}" placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" autocomplete="current-password"><button type="button" id="reveal" aria-controls="password">Show</button></div><button class="primary" type="submit" name="entry" value="credentials">Continue</button><button class="secondary" type="submit" name="signup" value="true">Create an account</button>`;
+  }
   function moduleRoute() {
     const route = window.location.hash.slice(2).split("?")[0];
     if (!app_config_default.moduleEntry || !route || ["signin", "content", "privacy", ...accountRoutes].includes(route))
@@ -10167,7 +10174,11 @@
       navigate("content");
     });
     if (oidc && element("signin"))
-      element("signin").innerHTML = providerEntry(app_config_default.title, app_config_default.appId);
+      element("signin").innerHTML = providerEntry(
+        app_config_default.title,
+        app_config_default.appId,
+        app_config_default.ownCredentials ? credentialFields() : ""
+      );
     element("forget-hint")?.addEventListener("click", () => {
       forgetSignIn(app_config_default.appId);
       render();
@@ -10188,11 +10199,16 @@
         render();
         return;
       }
-      const signup = event.submitter?.name === "signup";
+      const submitter = event.submitter;
+      const signup = submitter?.name === "signup";
+      const throughFidj = submitter?.name === "entry" && submitter.value === "fidj";
       void action(async () => {
-        if (oidc) {
+        if (oidc && throughFidj) {
           window.location.assign(await oidc.beginLogin());
           return;
+        }
+        if (oidc && (!email || !password)) {
+          throw new Error("Enter your email and password, or sign in with Fidj.");
         }
         try {
           await sdk.login(email, password, { autoSignup: signup, ...acceptance });
