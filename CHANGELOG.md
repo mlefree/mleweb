@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.3.11 — Unreleased
+
+- Build against SDK 3.6.28, so *Continue with Fidj* reuses an existing Fidj
+  session: a person already signed in elsewhere with Fidj comes back signed in
+  without typing a password, and an already-approved site needs no second
+  approval.
+
 ## 3.3.10 — Unreleased
 
 - Sign in through the Fidj provider: the site shows a single *Continue with

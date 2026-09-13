@@ -14,7 +14,7 @@ on:
         default: false
       sdk_ref:
         description: SDK version branch or commit to validate
-        default: 9f5d3cf479831a2150304da6fd7652b91a30d491
+        default: a4d235f139566bb25af4036cd592e715060dbe2f
 permissions:
   contents: read
 jobs:
@@ -36,7 +36,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: ofidj/fidj-node
-          ref: ${{ inputs.sdk_ref || '9f5d3cf479831a2150304da6fd7652b91a30d491' }}
+          ref: ${{ inputs.sdk_ref || 'a4d235f139566bb25af4036cd592e715060dbe2f' }}
           path: sdk
       - uses: actions/checkout@v4
         with:
