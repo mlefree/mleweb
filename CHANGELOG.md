@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.3.14 — Unreleased
+
+- Offer an email and a password beside the Fidj door (`--credentials true`).
+  Arriving with no session, a person can sign in here as well as through Fidj.
+  The cost is stated where it is paid: on that path this site handles the Fidj
+  password, while the Fidj door still never shows it one.
+
 ## 3.3.13 — Unreleased
 
 - Build on generator 1.2.0: the sign-in entry explains that Mat Cloud App
