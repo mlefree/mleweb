@@ -7047,11 +7047,18 @@
             return { status: response.status, data: result };
           });
         }
+        // Signing out has one desired end state and the local session is always
+        // reachable, so this never rejects. A server that refuses the call — the
+        // credential just changed, the session was already revoked, the network is
+        // gone — has not kept the person signed in, and reporting a failure over a
+        // success they already got is how a password change ends in "Request
+        // failed" on top of a password that did change.
         logout() {
           return __awaiter(this, void 0, void 0, function* () {
             try {
               if (this.hasSession())
                 yield this.request("/me/oidc/logout", "POST", {});
+            } catch (_a) {
             } finally {
               this.clear();
             }
@@ -7479,7 +7486,7 @@
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.bpInfo = void 0;
-      exports.bpInfo = { version: "v3.6.28" };
+      exports.bpInfo = { version: "v3.6.29" };
     }
   });
 
@@ -9835,6 +9842,7 @@
     logo: "./brand/logo.gif",
     favicon: "./brand/favicon.gif",
     moduleEntry: "",
+    moduleMount: null,
     domain: "mlefree.com"
   };
 
@@ -10002,26 +10010,49 @@
     }
   }
   function navigate(route) {
-    window.history.replaceState(null, "", "#/" + route);
+    if (route !== currentRoute()) window.history.pushState(null, "", "#/" + route);
     if (!busy) render();
   }
   function moduleRoute() {
     const route = window.location.hash.slice(2).split("?")[0];
     if (!app_config_default.moduleEntry || !route || ["signin", "content", "privacy", ...accountRoutes].includes(route))
       return null;
-    const target = new URL(app_config_default.moduleEntry, window.location.href);
-    target.hash = window.location.hash;
-    return target.href;
+    return route;
+  }
+  var moduleStarted = false;
+  function startModule() {
+    if (moduleStarted) return;
+    const mount = app_config_default.moduleMount;
+    if (!mount) return;
+    moduleStarted = true;
+    document.body.classList.add("has-module");
+    document.body.replaceChildren(
+      new Range().createContextualFragment(mount.markup)
+    );
+    for (const href of mount.styles) {
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = href;
+      document.head.appendChild(link);
+    }
+    for (const script of mount.scripts) {
+      const element2 = document.createElement("script");
+      if (script.module) element2.type = "module";
+      element2.src = script.src;
+      document.body.appendChild(element2);
+    }
   }
   function render() {
     if (!initialized) {
       root.innerHTML = '<p role="status">Loading your session\u2026</p>';
       return;
     }
-    const applicationRoute = moduleRoute();
-    if (applicationRoute) {
-      root.innerHTML = '<p role="status">Opening your app\u2026</p>';
-      window.location.replace(applicationRoute);
+    if (moduleRoute()) {
+      startModule();
+      return;
+    }
+    if (moduleStarted) {
+      window.location.reload();
       return;
     }
     let route = currentRoute();

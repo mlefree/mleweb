@@ -711,6 +711,9 @@ body.signin-view main {
   margin: 0;
   padding: 0;
 }
+body.has-module {
+  margin: 0;
+}
 .signin-shell {
   display: flex;
   flex-wrap: wrap;
