@@ -20,6 +20,8 @@
   --fidj-text-faint: #6b655f;
   --fidj-placeholder: #a8a099;
   --fidj-accent: #d6342c;
+  --fidj-accent-strong: #b52a23;
+  --fidj-on-accent: #fbfaf8;
   --fidj-danger: #b8352c;
   --fidj-danger-strong: #8c2a22;
   --fidj-danger-tint: #fdf7f6;
@@ -808,7 +810,6 @@ body.has-module {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  border-top: 1px solid var(--fidj-line-soft);
   padding-top: 20px;
 }
 .signin-trust-head {
@@ -871,7 +872,8 @@ body.has-module {
 .signin-form input {
   min-height: 48px;
 }
-.signin-form form > button {
+.signin-form form > button,
+.signin-form form #email-entry > button {
   min-height: 48px;
   width: 100%;
   margin-top: 12px;
@@ -1001,13 +1003,54 @@ body.has-module {
 .content-account input:not([type=checkbox]) {
   width: 100%;
 }
-.content-nav {
+.topbar .content-nav {
+  border: 0;
+  border-left: 1px solid var(--fidj-ink-line-soft);
+  border-radius: 0;
+  margin: 0 auto 0 0;
+  padding-left: clamp(12px, 2vw, 20px);
+  gap: 2px;
+  flex-wrap: nowrap;
+}
+.topbar .content-nav button {
+  padding: 8px 12px;
+  font-size: 13.5px;
+  color: var(--fidj-on-ink-faint);
+  border-bottom: 0;
+  white-space: nowrap;
+}
+.topbar .content-nav button:hover:not(:disabled) {
+  color: var(--fidj-on-ink);
+}
+.topbar .content-nav button.selected {
+  color: var(--fidj-on-ink);
+  font-weight: 600;
+}
+.topbar .content-nav button:last-child {
+  margin-left: 0;
+}
+.account-identity {
+  font-size: 15px;
+}
+.account-actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 10px;
+  margin-top: 28px;
+  padding-top: 22px;
+  border-top: 1px solid var(--fidj-line-soft);
 }
-.content-nav #exit {
-  margin-left: auto;
+.account-actions .primary {
+  width: auto;
+  flex: 1;
+  min-width: 200px;
+  margin: 0;
+}
+.topbar .content-nav #account-tab {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 .signin-logo {
   width: 22px;
@@ -1203,5 +1246,114 @@ button.quiet {
   font: inherit;
   cursor: pointer;
   width: auto;
+}
+.primary.fidj-entry {
+  background: var(--fidj-accent);
+  border-color: var(--fidj-accent);
+  color: var(--fidj-on-accent);
+  margin-top: 0;
+}
+.primary.fidj-entry:hover:not(:disabled) {
+  background: var(--fidj-accent-strong);
+  border-color: var(--fidj-accent-strong);
+}
+.primary.fidj-entry.is-waiting,
+.primary.fidj-entry.is-waiting:hover:not(:disabled) {
+  background: var(--fidj-surface-sunk);
+  border-color: var(--fidj-line);
+  color: var(--fidj-text-faint);
+  cursor: pointer;
+}
+.primary.fidj-entry.is-waiting:hover:not(:disabled) {
+  border-color: var(--fidj-line-hover);
+  color: var(--fidj-text-muted);
+}
+.signin-alternate {
+  margin-top: 2px;
+}
+.signin-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin: 0;
+  padding: 8px 0;
+  min-height: 0;
+  background: none;
+  border: none;
+  font: inherit;
+  font-size: 13.5px;
+  color: var(--fidj-text-muted);
+  cursor: pointer;
+}
+.signin-toggle::before,
+.signin-toggle::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: var(--fidj-line);
+}
+.signin-toggle-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.signin-toggle:hover:not(:disabled) {
+  color: var(--fidj-text);
+}
+.signin-toggle:hover:not(:disabled)::before,
+.signin-toggle:hover:not(:disabled)::after {
+  background: var(--fidj-line-hover);
+}
+.signin-toggle .caret {
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid currentColor;
+  transition: transform 220ms ease;
+}
+.signin-toggle[aria-expanded=true] .caret {
+  transform: rotate(180deg);
+}
+.signin-alternate #email-entry {
+  margin-top: 6px;
+}
+.primary.fidj-entry {
+  overflow: hidden;
+  max-height: 64px;
+  transition:
+    max-height 220ms ease,
+    min-height 220ms ease,
+    opacity 140ms ease,
+    margin 220ms ease,
+    padding 220ms ease,
+    border-width 220ms ease;
+}
+.primary.fidj-entry.is-folded {
+  min-height: 0;
+  max-height: 0;
+  opacity: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  border-width: 0;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .primary.fidj-entry,
+  .signin-toggle .caret {
+    transition: none;
+  }
+}
+.signin-return {
+  margin: 0 0 18px;
+  padding: 10px 12px;
+  background: var(--fidj-surface-sunk);
+  border-left: 2px solid var(--fidj-accent);
+  color: var(--fidj-text-muted);
+  font-size: 13.5px;
+  line-height: 1.5;
 }
 /*# sourceMappingURL=main.css.map */
