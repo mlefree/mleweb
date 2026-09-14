@@ -6949,12 +6949,22 @@
               for (const endpoint of ["authorization_endpoint", "token_endpoint", "jwks_uri"])
                 if (new URL(String(this.metadata[endpoint])).origin !== issuer.origin)
                   throw new Error("Unexpected identity endpoint origin");
+              if (this.metadata.end_session_endpoint && new URL(String(this.metadata.end_session_endpoint)).origin !== issuer.origin)
+                throw new Error("Unexpected identity endpoint origin");
             }
             return this.metadata;
           });
         }
         hasSession() {
           return !!this.options.storage.getItem(this.prefix + ".session");
+        }
+        // Somebody who signed out of Fidj itself must not be recognised again on the
+        // next render. Ending the provider session is what makes that true, and that
+        // call can be refused — the sign-out watched in production answered 503 — so
+        // the fact they asked outlives it. A sign-in screen reads this to know it has
+        // to ask rather than assume, and signing in again is what forgets it.
+        signedOutHere() {
+          return this.options.storage.getItem(this.prefix + ".signedOut") === "true";
         }
         session() {
           return JSON.parse(this.options.storage.getItem(this.prefix + ".session") || "null");
@@ -6998,6 +7008,7 @@
           });
         }
         save(tokens, identity) {
+          this.options.storage.removeItem(this.prefix + ".signedOut");
           this.options.storage.setItem(this.prefix + ".session", JSON.stringify({ tokens, identity, expiresAt: Date.now() + Number(tokens.expires_in || 300) * 1e3 }));
         }
         accessToken() {
@@ -7047,21 +7058,47 @@
             return { status: response.status, data: result };
           });
         }
+        // Where the provider ends the session it recognises this browser by, for a
+        // caller that can leave the page. Nothing here ends anything on its own: the
+        // hint and the return address are what let the provider finish without
+        // asking the person which account they meant.
+        endSessionUrl() {
+          return __awaiter(this, void 0, void 0, function* () {
+            var _a;
+            const session = this.session(), endpoint = (yield this.discovery()).end_session_endpoint;
+            if (!endpoint || !((_a = session === null || session === void 0 ? void 0 : session.tokens) === null || _a === void 0 ? void 0 : _a.id_token))
+              return void 0;
+            const url = new URL(String(endpoint));
+            url.search = new URLSearchParams({ client_id: this.options.clientId, id_token_hint: session.tokens.id_token, post_logout_redirect_uri: this.options.redirectUri }).toString();
+            return url.href;
+          });
+        }
         // Signing out has one desired end state and the local session is always
         // reachable, so this never rejects. A server that refuses the call — the
         // credential just changed, the session was already revoked, the network is
         // gone — has not kept the person signed in, and reporting a failure over a
         // success they already got is how a password change ends in "Request
         // failed" on top of a password that did change.
+        // An app's sign-out ends that app's access and nothing else: the provider
+        // session is what the person's other apps recognise them by, and ending it
+        // from one of them signs them out of all of them. `endProviderSession` is
+        // Fidj's own sign-out, which means the opposite — and returns where to finish
+        // it, because only the caller can leave the page.
         logout() {
-          return __awaiter(this, void 0, void 0, function* () {
+          return __awaiter(this, arguments, void 0, function* (options = {}) {
+            const endSession = options.endProviderSession ? yield this.endSessionUrl().catch(() => void 0) : void 0;
+            let confirmed = false;
             try {
               if (this.hasSession())
-                yield this.request("/me/oidc/logout", "POST", {});
+                yield this.request("/me/oidc/logout", "POST", { endProviderSession: !!options.endProviderSession });
+              confirmed = true;
             } catch (_a) {
             } finally {
               this.clear();
             }
+            if (options.endProviderSession)
+              this.options.storage.setItem(this.prefix + ".signedOut", "true");
+            return confirmed ? void 0 : endSession;
           });
         }
         clear() {
@@ -7486,7 +7523,7 @@
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.bpInfo = void 0;
-      exports.bpInfo = { version: "v3.6.29" };
+      exports.bpInfo = { version: "v3.7.3" };
     }
   });
 
@@ -7938,10 +7975,21 @@
             return JSON.parse(yield this.connection.getIdPayload({ message: "" })).message;
           });
         }
+        // Signing out of Fidj itself, which an app's sign-out deliberately is not:
+        // it ends the identity session this browser is recognised by, so the next
+        // screen asks instead of walking the person back in. It answers with where
+        // the provider finishes that, for a caller that can leave the page.
+        logoutFromFidj() {
+          return __awaiter(this, void 0, void 0, function* () {
+            if (this.oidc())
+              return this.oidc().logout({ endProviderSession: true });
+            return this.logout(true);
+          });
+        }
         logout(force) {
           return __awaiter(this, void 0, void 0, function* () {
             if (this.oidc())
-              return this.oidc().logout();
+              return void (yield this.oidc().logout());
             if (!this.connection.getClient() && !force) {
               return this._removeAll().then(() => {
                 return this.session.create(this.connection.fidjId, true);
@@ -9551,14 +9599,6 @@
     }
   });
 
-  // ../../../contracts/dist/fidj-api/FidjApiAppsOAuthStatusResponse.js
-  var require_FidjApiAppsOAuthStatusResponse = __commonJS({
-    "../../../contracts/dist/fidj-api/FidjApiAppsOAuthStatusResponse.js"(exports) {
-      "use strict";
-      Object.defineProperty(exports, "__esModule", { value: true });
-    }
-  });
-
   // ../../../contracts/dist/fidj-api/FidjApiAppsMeDetailsResponse.js
   var require_FidjApiAppsMeDetailsResponse = __commonJS({
     "../../../contracts/dist/fidj-api/FidjApiAppsMeDetailsResponse.js"(exports) {
@@ -9631,9 +9671,25 @@
     }
   });
 
+  // ../../../contracts/dist/fidj-api/FidjApiPurposes.js
+  var require_FidjApiPurposes = __commonJS({
+    "../../../contracts/dist/fidj-api/FidjApiPurposes.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", { value: true });
+    }
+  });
+
   // ../../../contracts/dist/fidj-api/identity.js
   var require_identity = __commonJS({
     "../../../contracts/dist/fidj-api/identity.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", { value: true });
+    }
+  });
+
+  // ../../../contracts/dist/fidj-api/FidjApiAccountSelfService.js
+  var require_FidjApiAccountSelfService = __commonJS({
+    "../../../contracts/dist/fidj-api/FidjApiAccountSelfService.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
     }
@@ -9679,7 +9735,6 @@
       __exportStar(require_FidjApiAppsDetailsResponse(), exports);
       __exportStar(require_FidjApiAppsUpdateRequest(), exports);
       __exportStar(require_FidjApiAppsUsersResponse(), exports);
-      __exportStar(require_FidjApiAppsOAuthStatusResponse(), exports);
       __exportStar(require_FidjApiAppsMeDetailsResponse(), exports);
       __exportStar(require_FidjApiContractsListResponse(), exports);
       __exportStar(require_FidjApiContractsCreateRequest(), exports);
@@ -9689,7 +9744,9 @@
       __exportStar(require_FidjApiPrivacyResponse(), exports);
       __exportStar(require_FidjApiAccountRecovery(), exports);
       __exportStar(require_FidjApiGroups(), exports);
+      __exportStar(require_FidjApiPurposes(), exports);
       __exportStar(require_identity(), exports);
+      __exportStar(require_FidjApiAccountSelfService(), exports);
     }
   });
 
@@ -9699,7 +9756,7 @@
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.bpInfo = void 0;
-      exports.bpInfo = { version: "v3.6.24" };
+      exports.bpInfo = { version: "v3.7.3" };
     }
   });
 
@@ -9865,7 +9922,7 @@
     apiEndpoint: "https://api.fidj.ovh/v3",
     dashboardUrl: "https://fidj.ovh",
     title: "Mat Cloud App",
-    releaseVersion: "26.09.13",
+    releaseVersion: "3.7.3",
     localDemo: false,
     allowAnonymous: false,
     ownCredentials: true,
@@ -9883,18 +9940,18 @@
 
   // src/version.ts
   function showVersionBadge(version, apiEndpoint) {
-    if (!/^\d{2}\.\d{2}\.\d{2}$/.test(version || "")) return;
+    if (!/^\d+\.\d+\.\d+(-[\w.]+)?$/.test(version || "")) return;
     const badge = document.createElement("div");
     badge.className = "fidj-version";
-    badge.setAttribute("aria-label", `App version ${version}`);
-    badge.textContent = `v${version}`;
+    badge.setAttribute("aria-label", `Fidj version ${version}`);
+    badge.textContent = `fidj@${version}`;
     document.body.append(badge);
     if (apiEndpoint) {
       void fetch(`${apiEndpoint.replace(/\/$/, "")}/status`).then((response) => response.ok ? response.json() : null).then((status) => {
         const apiVersion = status?.version || status?.built;
         if (!apiVersion) return;
-        badge.textContent = `v${version} \xB7 API ${apiVersion}`;
-        badge.setAttribute("aria-label", `App version ${version}, API version ${apiVersion}`);
+        badge.textContent = `fidj@${version} \xB7 API ${apiVersion}`;
+        badge.setAttribute("aria-label", `Fidj version ${version}, API version ${apiVersion}`);
       }).catch(() => void 0);
     }
   }
@@ -10092,6 +10149,7 @@
     for (const script of mount.scripts) {
       const element2 = document.createElement("script");
       if (script.module) element2.type = "module";
+      element2.async = false;
       element2.src = script.src;
       document.body.appendChild(element2);
     }
@@ -10193,6 +10251,7 @@
       anonymous = true;
       navigate("content");
     });
+    if (oidc?.signedOutHere()) forgetSignIn(app_config_default.appId);
     if (oidc && element("signin"))
       element("signin").innerHTML = providerEntry(
         app_config_default.title,
@@ -10211,7 +10270,9 @@
       askedProvider = true;
       void (async () => {
         if (!await providerRendersHere()) return;
-        window.location.assign(await oidc.beginLogin());
+        window.location.assign(
+          await oidc.beginLogin(oidc.signedOutHere() ? { prompt: "login" } : {})
+        );
       })();
     }
     element("forget-hint")?.addEventListener("click", () => {
@@ -10245,6 +10306,11 @@
       }
       void action(async () => {
         if (oidc && throughFidj) {
+          try {
+            const remembered = signInHint(app_config_default.appId);
+            if (remembered) sessionStorage.setItem("fidj.interaction.email", remembered);
+          } catch {
+          }
           window.location.assign(await oidc.beginLogin());
           return;
         }
