@@ -10405,6 +10405,25 @@
     };
     waiting.insertAdjacentElement("afterend", cancel);
   }
+  var RECOGNITION_ASKED = "fidj.oidc.recognition-asked";
+  var PUBLIC_ROUTE = "pub";
+  async function askWhetherFidjKnowsThisBrowser() {
+    if (!oidc || !isFidjItself || sdk.isLoggedIn() || oidc.signedOutHere())
+      return false;
+    if ((moduleRoute() || "").split("/")[0] === PUBLIC_ROUTE) return false;
+    try {
+      if (sessionStorage.getItem(RECOGNITION_ASKED) === "true") return false;
+      sessionStorage.setItem(RECOGNITION_ASKED, "true");
+    } catch {
+      return false;
+    }
+    try {
+      window.location.assign(await oidc.beginLogin({ silent: true }));
+      return true;
+    } catch {
+      return false;
+    }
+  }
   function signInThroughProvider(trigger, options = {}) {
     if (!oidc) return;
     if (waitingFor?.isOpen()) {
@@ -10941,7 +10960,16 @@
       if (oidc && new URL(window.location.href).searchParams.has("state")) {
         const callback = new URL(window.location.href);
         window.history.replaceState(null, "", window.location.pathname + "#/content");
-        await oidc.completeLogin(callback);
+        try {
+          await oidc.completeLogin(callback);
+        } catch (refusal) {
+          const why = refusal || {};
+          if (why.code === "consent_required") {
+            window.location.assign(await oidc.beginLogin());
+            return;
+          }
+          if (!why.silentRefusal) throw refusal;
+        }
         try {
           sessionStorage.removeItem("fidj.interaction.email");
         } catch {
@@ -10955,7 +10983,9 @@
         await refresh();
         if (!moduleRoute() && !accountRoutes.includes(currentRoute()))
           navigate("content");
+        return;
       }
+      await askWhetherFidjKnowsThisBrowser();
     });
   }
 })();
