@@ -3831,6 +3831,9 @@
             if (args.timeout) {
               options["timeout"] = args.timeout;
             }
+            if (args.withCredentials) {
+              options["withCredentials"] = true;
+            }
             let res;
             try {
               res = yield axios_1.default.post(opt.url, opt.data, options);
@@ -3858,6 +3861,9 @@
             if (args.timeout) {
               options["timeout"] = args.timeout;
             }
+            if (args.withCredentials) {
+              options["withCredentials"] = true;
+            }
             let res;
             try {
               res = yield axios_1.default.put(opt.url, opt.data, options);
@@ -3884,6 +3890,9 @@
             const options = { headers: opt.headers, data: opt.data };
             if (args.timeout) {
               options["timeout"] = args.timeout;
+            }
+            if (args.withCredentials) {
+              options["withCredentials"] = true;
             }
             let res;
             try {
@@ -3913,6 +3922,9 @@
             const options = { headers: opt.headers };
             if (args.timeout) {
               options["timeout"] = args.timeout;
+            }
+            if (args.withCredentials) {
+              options["withCredentials"] = true;
             }
             let res;
             try {
@@ -7578,7 +7590,7 @@
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.bpInfo = void 0;
-      exports.bpInfo = { version: "v3.9.2" };
+      exports.bpInfo = { version: "v3.10.0" };
     }
   });
 
@@ -8258,7 +8270,7 @@
               case "POST":
                 answer = yield query.post({
                   url: firstEndpointUrl,
-                  // not used : withCredentials: true,
+                  withCredentials: input.withCredentials,
                   headers: {
                     "Content-Type": "application/json",
                     Accept: "application/json",
@@ -8271,7 +8283,7 @@
               case "PUT":
                 answer = yield query.put({
                   url: firstEndpointUrl,
-                  // not used : withCredentials: true,
+                  withCredentials: input.withCredentials,
                   headers: {
                     "Content-Type": "application/json",
                     Accept: "application/json",
@@ -8284,7 +8296,7 @@
               case "DELETE":
                 answer = yield query.delete({
                   url: firstEndpointUrl,
-                  // not used : withCredentials: true,
+                  withCredentials: input.withCredentials,
                   headers: {
                     "Content-Type": "application/json",
                     Accept: "application/json",
@@ -8297,7 +8309,7 @@
               default:
                 answer = yield query.get({
                   url: firstEndpointUrl,
-                  // not used : withCredentials: true,
+                  withCredentials: input.withCredentials,
                   headers: {
                     "Content-Type": "application/json",
                     Accept: "application/json",
@@ -9858,7 +9870,7 @@
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.bpInfo = void 0;
-      exports.bpInfo = { version: "v3.9.0" };
+      exports.bpInfo = { version: "v3.10.0" };
     }
   });
 
@@ -10159,7 +10171,7 @@
     apiEndpoint: "https://api.fidj.ovh/v3",
     dashboardUrl: "https://fidj.ovh",
     title: "Mat Cloud App",
-    releaseVersion: "3.9.2",
+    releaseVersion: "3.10.0",
     localDemo: false,
     allowAnonymous: false,
     signin: "both",
@@ -10619,6 +10631,19 @@
           await sdk.login(email, password, { autoSignup: signup, ...acceptance });
         } catch (error) {
           throw new Error(signInErrorMessage(error));
+        }
+        if (isFidjItself) {
+          try {
+            await sdk.sendOnEndpoint({
+              verb: "POST",
+              key: "me",
+              relativePath: "oidc/session",
+              // The whole point of the call is the cookie it comes back with, and
+              // a cross-origin response's Set-Cookie is dropped without this.
+              withCredentials: true
+            });
+          } catch {
+          }
         }
         await refresh();
         anonymous = false;
