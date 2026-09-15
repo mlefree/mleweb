@@ -7,7 +7,7 @@ on:
     inputs:
       generator_ref:
         description: Generator version branch or commit to validate
-        default: e52a783ff8ab1998d1aa0ef533ac54d50e300d50
+        default: cfc03d0c16955133daa3d14957eebfcde32372ef
       publish:
         description: Publish the generated site to gh-pages (mlefree.com)
         type: boolean
@@ -31,7 +31,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: ofidj/generator-fidj
-          ref: ${{ inputs.generator_ref || 'e52a783ff8ab1998d1aa0ef533ac54d50e300d50' }}
+          ref: ${{ inputs.generator_ref || 'cfc03d0c16955133daa3d14957eebfcde32372ef' }}
           path: generator
       - uses: actions/checkout@v4
         with:
