@@ -10407,6 +10407,17 @@
   }
   var RECOGNITION_ASKED = "fidj.oidc.recognition-asked";
   var PUBLIC_ROUTE = "pub";
+  var recognising = false;
+  function mightBeRecognised() {
+    if (!oidc || !isFidjItself) return false;
+    if ((moduleRoute() || "").split("/")[0] === PUBLIC_ROUTE) return false;
+    if (oidc.signedOutHere()) return false;
+    try {
+      return sessionStorage.getItem(RECOGNITION_ASKED) !== "true";
+    } catch {
+      return false;
+    }
+  }
   async function askWhetherFidjKnowsThisBrowser() {
     if (!oidc || !isFidjItself || sdk.isLoggedIn() || oidc.signedOutHere())
       return false;
@@ -10569,6 +10580,10 @@
     if (route === "content") {
       root.innerHTML = element("public-content").innerHTML;
       renderNav("content");
+      return;
+    }
+    if (recognising) {
+      root.innerHTML = `<section class="signin-shell"><div class="signin-form"><p role="status">Checking whether you are already signed in to Fidj\u2026</p></div></section>`;
       return;
     }
     root.innerHTML = `<section class="signin-shell"><div class="signin-intro${app_config_default.highlights?.length ? "" : " is-plain"}"><header class="signin-masthead"><img class="app-mark" src="${escape(app_config_default.logo)}" alt=""><strong>${escape(app_config_default.title)}</strong></header>
@@ -10946,6 +10961,7 @@
   }
   function boot() {
     window.addEventListener("hashchange", render);
+    recognising = mightBeRecognised();
     render();
     if (readInteraction()) {
       render();
@@ -10979,13 +10995,16 @@
         apiEndpoint: app_config_default.apiEndpoint,
         prod: !app_config_default.localDemo
       });
+      recognising = recognising && !sdk.isLoggedIn();
       if (sdk.isLoggedIn()) {
         await refresh();
         if (!moduleRoute() && !accountRoutes.includes(currentRoute()))
           navigate("content");
         return;
       }
-      await askWhetherFidjKnowsThisBrowser();
+      if (await askWhetherFidjKnowsThisBrowser()) return;
+      recognising = false;
+      render();
     });
   }
 })();
