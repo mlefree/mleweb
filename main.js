@@ -7578,7 +7578,7 @@
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.bpInfo = void 0;
-      exports.bpInfo = { version: "v3.8.0" };
+      exports.bpInfo = { version: "v3.9.2" };
     }
   });
 
@@ -7884,6 +7884,7 @@
             if (!this.connection.isReady()) {
               throw new FidjError_1.FidjError(404, "Need an initialized FidjService");
             }
+            this.forgetProviderSession();
             try {
               yield this._removeAll();
               yield this._createSession(this.connection.fidjId);
@@ -7958,6 +7959,22 @@
             yield this.init(fidjId, options);
             return this.loginInDemoMode();
           });
+        }
+        // Typing a credential says this session is not the provider's. The Fidj door
+        // leaves `fidj.oidc.<appId>.config` behind, `clear()` keeps it when the
+        // provider session dies, and `oidc()` reads only that config — so the tab
+        // stayed in provider mode for good. A sign-in then minted its three tokens
+        // and never used them, because every call starts with `if (this.oidc())` and
+        // found no session behind it: watched on fidj.ovh as "Sign in first" over a
+        // network trace that was green from end to end.
+        forgetProviderSession() {
+          const client = this.oidc();
+          if (!client) {
+            return;
+          }
+          client.clear();
+          this.oidcClient = void 0;
+          sessionStorage.removeItem("fidj.oidc." + this.connection.fidjId + ".config");
         }
         oidc() {
           if (this.oidcClient) {
@@ -8786,9 +8803,13 @@
               headers: {
                 "Content-Type": "application/json",
                 Accept: "application/json",
-                Authorization: "Bearer " + refreshToken,
-                timeout: sdk_1.FidjNodeService.DEFAULT_TIMEOUT_MS
-              }
+                Authorization: "Bearer " + refreshToken
+              },
+              // Beside the headers, never inside them: a request header named
+              // `timeout` is not on the API's allowlist, so the browser's
+              // preflight refused the whole call and signing out never
+              // reached the server.
+              timeout: sdk_1.FidjNodeService.DEFAULT_TIMEOUT_MS
             })).data;
           });
         }
@@ -9519,6 +9540,14 @@
     }
   });
 
+  // ../../../contracts/dist/fidj-api/FidjApiRateLimitsResponse.js
+  var require_FidjApiRateLimitsResponse = __commonJS({
+    "../../../contracts/dist/fidj-api/FidjApiRateLimitsResponse.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", { value: true });
+    }
+  });
+
   // ../../../contracts/dist/fidj-api/FidjApiStatusResponse.js
   var require_FidjApiStatusResponse = __commonJS({
     "../../../contracts/dist/fidj-api/FidjApiStatusResponse.js"(exports) {
@@ -9788,6 +9817,7 @@
         for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports2, p)) __createBinding(exports2, m, p);
       };
       Object.defineProperty(exports, "__esModule", { value: true });
+      __exportStar(require_FidjApiRateLimitsResponse(), exports);
       __exportStar(require_FidjApiStatusResponse(), exports);
       __exportStar(require_FidjApiErrorResponse(), exports);
       __exportStar(require_FidjApiOAuthTokenRequest(), exports);
@@ -9828,7 +9858,7 @@
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.bpInfo = void 0;
-      exports.bpInfo = { version: "v3.8.0" };
+      exports.bpInfo = { version: "v3.9.0" };
     }
   });
 
@@ -10129,7 +10159,7 @@
     apiEndpoint: "https://api.fidj.ovh/v3",
     dashboardUrl: "https://fidj.ovh",
     title: "Mat Cloud App",
-    releaseVersion: "3.8.0",
+    releaseVersion: "3.9.2",
     localDemo: false,
     allowAnonymous: false,
     signin: "both",
