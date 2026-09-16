@@ -7,18 +7,17 @@ on:
     inputs:
       generator_ref:
         description: Generator version branch or commit to validate
-        default: cfc03d0c16955133daa3d14957eebfcde32372ef
+        default: f8d96954ba05d8ebcb777a55e7ee6f5f0ff52a3a
       publish:
         description: Publish the generated site to gh-pages (mlefree.com)
         type: boolean
         default: false
       entry_ref:
-        description: 'fidj-entry commit to generate against'
-        required: false
-        type: string
+        description: Entry version branch or commit to validate
+        default: 6114cb3a44ffd6ef28547389c37993616c9eb224
       sdk_ref:
         description: SDK version branch or commit to validate
-        default: dad9e03947abb0700e5160f891d7f0ef2a373b29
+        default: e4502fd321704d189f9d64893c194683e2576325
 permissions:
   contents: read
 jobs:

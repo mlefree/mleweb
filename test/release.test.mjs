@@ -8,7 +8,7 @@ import {readFile} from "node:fs/promises";
 // the shape and the agreement between the two places that do name it.
 test("the sandbox companion deploy uses the released Fidj sources", async () => {
   const workflow = await readFile(".github/workflows/generated-app.yml", "utf8");
-  for (const input of ["generator_ref", "sdk_ref"]) {
+  for (const input of ["generator_ref", "sdk_ref", "entry_ref"]) {
     const declared = workflow.match(
       new RegExp(`${input}:[\\s\\S]*?default: ([0-9a-f]{40})`),
     );
