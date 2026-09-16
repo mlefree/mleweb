@@ -4290,9 +4290,10 @@
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.FidjError = void 0;
       var FidjError = class {
-        constructor(code, reason) {
+        constructor(code, reason, details) {
           this.code = code;
           this.reason = reason;
+          this.details = details;
         }
         equals(err) {
           return this.code === err.code && this.reason === err.reason;
@@ -7590,7 +7591,7 @@
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.bpInfo = void 0;
-      exports.bpInfo = { version: "v3.10.0" };
+      exports.bpInfo = { version: "v3.11.0" };
     }
   });
 
@@ -7800,6 +7801,25 @@
       var FidjError_1 = require_FidjError();
       var bpInfo_1 = require_bpInfo();
       var verifyAppSession_1 = require_verifyAppSession();
+      function refusalReason(err) {
+        const body = err === null || err === void 0 ? void 0 : err.message;
+        if (typeof body === "string" && body) {
+          return body;
+        }
+        if (body && typeof body === "object") {
+          for (const field of ["status", "reason", "code", "message"]) {
+            const value = body[field];
+            if (typeof value === "string" && value) {
+              return value;
+            }
+          }
+          try {
+            return JSON.stringify(body);
+          } catch (_a) {
+          }
+        }
+        return (err === null || err === void 0 ? void 0 : err.toString) ? err.toString() : String(err);
+      }
       var FidjNodeService2 = class _FidjNodeService {
         constructor(logger, promise, options) {
           this.sdk = {
@@ -7907,7 +7927,8 @@
                 throw err;
               }
               const code = typeof (err === null || err === void 0 ? void 0 : err.code) === "number" ? err.code : 500;
-              throw new FidjError_1.FidjError(code, (err === null || err === void 0 ? void 0 : err.toString) ? err.toString() : String(err));
+              const body = err === null || err === void 0 ? void 0 : err.message;
+              throw new FidjError_1.FidjError(code, refusalReason(err), body && typeof body === "object" ? body : void 0);
             }
             if (!this.sdk.useDB) {
               return this.connection.getUser();
@@ -8687,12 +8708,16 @@
               if ((options === null || options === void 0 ? void 0 : options.autoSignup) === false) {
                 dataLogin.autoSignup = false;
               }
-              const createdUser = (yield new Ajax_1.Ajax().post({
+              const account = yield new Ajax_1.Ajax().post({
                 url: urlLogin,
                 data: dataLogin,
                 headers: { "Content-Type": "application/json", Accept: "application/json" },
                 timeout: sdk_1.FidjNodeService.DEFAULT_TIMEOUT_MS
-              })).data.user;
+              });
+              if ((account === null || account === void 0 ? void 0 : account.status) === 201) {
+                throw new sdk_1.FidjError(403, "verification-required", { email: login });
+              }
+              const createdUser = account.data.user;
               this.setClientId(login);
               const urlToken = this.URI + "/apps/" + this.appId + "/tokens";
               const dataToken = {
@@ -8743,9 +8768,13 @@
               return new ClientTokens_1.ClientTokens(login, createdAccessToken, createdIdToken, createdRefreshToken);
             } catch (e) {
               this.logger.warn("Login impossible", e);
+              if (e instanceof sdk_1.FidjError) {
+                throw e;
+              }
               const code = typeof (e === null || e === void 0 ? void 0 : e.code) === "number" ? e.code : 500;
               const reason = typeof (e === null || e === void 0 ? void 0 : e.message) === "string" && e.message || typeof ((_a = e === null || e === void 0 ? void 0 : e.message) === null || _a === void 0 ? void 0 : _a.status) === "string" && e.message.status || typeof ((_b = e === null || e === void 0 ? void 0 : e.message) === null || _b === void 0 ? void 0 : _b.message) === "string" && e.message.message || typeof (e === null || e === void 0 ? void 0 : e.reason) === "string" && e.reason || "login-failed";
-              throw new sdk_1.FidjError(code, reason);
+              const body = e === null || e === void 0 ? void 0 : e.message;
+              throw new sdk_1.FidjError(code, reason, body && typeof body === "object" ? body : void 0);
             }
           });
         }
@@ -9870,7 +9899,7 @@
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.bpInfo = void 0;
-      exports.bpInfo = { version: "v3.10.0" };
+      exports.bpInfo = { version: "v3.11.0" };
     }
   });
 
@@ -9931,68 +9960,239 @@
     }
   });
 
-  // src/service-agreement.ts
-  function agreementMarkup() {
-    return `<div class="signin-agreement"><label class="agreement-choice"><input id="service-agreement" type="checkbox" aria-required="true" disabled><span id="agreement-label">I accept the service agreement for this app.</span></label><button type="button" id="read-agreement" disabled>Read service agreement</button><p id="agreement-status" class="fineprint" role="status">Loading service agreement\u2026</p><button type="button" id="retry-agreement" hidden>Retry</button></div><dialog id="agreement-dialog" aria-labelledby="agreement-heading"><h2 id="agreement-heading">Service agreement</h2><p id="agreement-version"></p><p id="agreement-text"></p><button type="button" id="close-agreement">Close agreement</button></dialog>`;
+  // ../../../entry/dist/model.js
+  var AGREEMENT_REQUIRED = "agreement_required";
+  function agreementRequired(error) {
+    if (!error || typeof error !== "object")
+      return false;
+    const detail = error;
+    if (detail.code === 409)
+      return true;
+    for (const field of [detail.code, detail.reason, detail.message]) {
+      if (typeof field === "string" && field.includes(AGREEMENT_REQUIRED))
+        return true;
+    }
+    return false;
   }
-  function acceptedAgreement(form) {
-    const checkbox = form.querySelector("#service-agreement");
-    if (!checkbox?.checked || checkbox.disabled || !checkbox.dataset.version) return null;
-    return { termsAccepted: true, termsVersion: checkbox.dataset.version };
+  function agreementFromRefusal(error) {
+    if (!agreementRequired(error))
+      return null;
+    const details = error.details;
+    const agreement = details?.agreement;
+    if (typeof agreement?.version !== "string" || !agreement.version)
+      return null;
+    if (typeof agreement?.text !== "string" || !agreement.text)
+      return null;
+    return { version: agreement.version, text: agreement.text };
+  }
+  function verificationPending(error) {
+    if (!error || typeof error !== "object")
+      return null;
+    const detail = error;
+    if (detail.reason !== "verification-required")
+      return null;
+    const email = detail.details?.email;
+    return { email: typeof email === "string" ? email : "" };
   }
   function signInErrorMessage(error) {
     const detail = error;
     const reason = typeof detail?.reason === "string" ? detail.reason : typeof detail?.message === "string" ? detail.message : "";
-    if (detail?.code === 429) return "Too many attempts. Please wait before trying again.";
-    if (reason === "unknown-user") return "We could not sign in to this account. Check the email and password.";
-    if (reason === "already exists - inconsistent request") return "An account already uses this email. Check the password or sign in instead.";
-    if (/ECONNREFUSED|ENOTFOUND|ETIMEDOUT|ECONNRESET|EHOSTUNREACH|network/i.test(reason)) return "We cannot reach Fidj right now. Please try again.";
+    if (detail?.code === 429)
+      return "Too many attempts. Please wait before trying again.";
+    if (reason === "unknown-user")
+      return "We could not sign in to this account. Check the email and password.";
+    if (reason === "already exists - inconsistent request")
+      return "An account already uses this email. Check the password or sign in instead.";
+    if (/ECONNREFUSED|ENOTFOUND|ETIMEDOUT|ECONNRESET|EHOSTUNREACH|network/i.test(reason))
+      return "We cannot reach Fidj right now. Please try again.";
     return "We could not sign in to this account. Please try again.";
   }
-  async function bindAgreement(form, title, endpoint, appId, checked = false) {
-    if (!form) return;
-    const checkbox = form.querySelector("#service-agreement");
-    if (!checkbox) return;
-    const read = form.querySelector("#read-agreement");
-    const dialog = form.querySelector("#agreement-dialog");
-    const status = form.querySelector("#agreement-status");
-    const retry = form.querySelector("#retry-agreement");
-    const gated = form.querySelector("#email-entry") || form;
-    const submitButtons = gated.querySelectorAll('button[type="submit"]');
-    const update = () => submitButtons.forEach((button) => {
-      button.disabled = checkbox.disabled;
-    });
-    form.querySelector("#agreement-label").textContent = `I accept the service agreement for ${title}.`;
-    update();
-    checkbox.addEventListener("change", update);
-    read.addEventListener("click", () => dialog.showModal());
-    form.querySelector("#close-agreement").addEventListener("click", () => dialog.close());
-    const load = async () => {
-      retry.hidden = true;
-      status.textContent = "Loading service agreement\u2026";
-      try {
-        const response = await fetch(`${endpoint}/apps/${encodeURIComponent(appId)}`, { signal: AbortSignal.timeout(1e4) });
-        if (!response.ok) throw new Error(response.status === 404 ? "missing" : "unreachable");
-        const agreement = (await response.json()).app?.agreement;
-        if (!agreement || typeof agreement.version !== "string" || !agreement.version || typeof agreement.text !== "string" || !agreement.text) throw new Error("missing");
-        if (!form.isConnected) return;
-        checkbox.dataset.version = agreement.version;
-        checkbox.disabled = false;
-        checkbox.checked = checked;
-        read.disabled = false;
-        dialog.querySelector("#agreement-version").textContent = `Version ${agreement.version}`;
-        dialog.querySelector("#agreement-text").textContent = agreement.text;
-        status.textContent = "Required to sign in. Optional data choices stay separate.";
-        update();
-      } catch (error) {
-        if (!form.isConnected) return;
-        status.textContent = error instanceof Error && error.message === "missing" ? "This app has no service agreement available." : "We cannot reach Fidj right now. Try again.";
-        retry.hidden = false;
+  function providerEntryModel(options) {
+    const { title, hint = "", isFidjItself: isFidjItself2 = false, shape = "button", hasCredentials = false } = options;
+    const both = shape === "both" && hasCredentials;
+    if (shape === "inline") {
+      return {
+        shape,
+        lead: isFidjItself2 ? "One account across every app that uses Fidj, and a separate set of choices for each one." : `${title} accounts are Fidj accounts. Sign in below \u2014 ${title} handles your password itself on this page.`,
+        door: null,
+        forget: null,
+        disclosure: null
+      };
+    }
+    const lead = hint ? `You signed in here with Fidj before. ${title} accounts are Fidj accounts \u2014 continue as yourself, or use another.` : both ? `${title} accounts are Fidj accounts. Fidj asks in a window of its own, so this site never sees your password.` : isFidjItself2 ? "One account across every app that uses Fidj, and a separate set of choices for each one. Fidj asks in a window of its own; this page stays where it is." : `${title} accounts are Fidj accounts. You will sign in \u2014 or create yours \u2014 in a Fidj window, so this site never sees your password.`;
+    const door = {
+      id: "fidj-entry",
+      name: "entry",
+      value: "fidj",
+      kind: "primary",
+      label: hint ? `Continue as ${hint}` : isFidjItself2 ? "Sign in" : "Sign in with Fidj"
+    };
+    const forget = hint ? { id: "forget-hint", kind: "quiet", label: "Use a different account" } : null;
+    return {
+      shape,
+      lead,
+      door,
+      forget,
+      // Fidj is the only door: it collects the agreement itself, a moment later,
+      // on the screen that names the app — and records it with its version.
+      disclosure: both ? { label: "Inline form", controls: "email-entry", expanded: false } : null
+    };
+  }
+  function agreementModel(title, agreement, state = {}) {
+    return {
+      heading: "Before you continue",
+      lead: `${title} asks you to accept its service agreement. Your optional privacy choices stay separate, and you can change them at any time.`,
+      versionLabel: `Version ${agreement.version ?? ""}`,
+      version: String(agreement.version ?? ""),
+      text: String(agreement.text ?? ""),
+      checkboxLabel: `I accept the service agreement for ${title}.`,
+      submitLabel: "Sign in",
+      submitDisabled: !state.checked
+    };
+  }
+  function verificationWaitModel(state) {
+    return {
+      status: "Your account is created. Waiting for you to open the link sent to",
+      email: state.email,
+      fineprint: "This continues on its own once you have. The link may take a minute, and it sometimes lands in spam. Wrong address? Correct it above and create the account again.",
+      notice: state.error ? { kind: "error", text: state.error } : state.resent ? {
+        kind: "info",
+        text: "The link was sent again. Only the newest one works."
+      } : null,
+      resendLabel: "Send the link again"
+    };
+  }
+  function accountModel(route, state) {
+    const empty = {
+      heading: "",
+      intro: "",
+      fields: [],
+      hint: "",
+      submitLabel: "",
+      alternative: null,
+      status: "",
+      extras: []
+    };
+    if (route === "forgot")
+      return {
+        ...empty,
+        heading: "Reset your password",
+        intro: "We\u2019ll email you a link to choose a new password for your shared Fidj account.",
+        fields: [
+          {
+            id: "recovery-email",
+            label: "Email address",
+            type: "email",
+            autocomplete: "email",
+            required: true
+          }
+        ],
+        submitLabel: "Send reset link"
+      };
+    if (route === "reset")
+      return {
+        ...empty,
+        heading: "Choose a new password",
+        intro: "This changes your Fidj password across all your apps and signs out existing sessions.",
+        fields: state.linkToken ? [
+          {
+            id: "new-password",
+            label: "New password",
+            type: "password",
+            autocomplete: "new-password",
+            minlength: 12,
+            required: true
+          },
+          {
+            id: "confirm-password",
+            label: "Confirm password",
+            type: "password",
+            autocomplete: "new-password",
+            minlength: 12,
+            required: true
+          }
+        ] : [],
+        hint: state.linkToken ? "Use at least 12 characters (up to 72 UTF-8 bytes)." : "",
+        submitLabel: state.linkToken ? "Save new password" : "",
+        alternative: state.linkToken ? null : {
+          text: "Request a new link if you no longer have an active reset link.",
+          href: "#/forgot",
+          label: "Request a reset link"
+        }
+      };
+    if (route === "verify")
+      return {
+        ...empty,
+        heading: state.verificationConfirmed ? "Email verified" : "Verify your email",
+        intro: state.verificationConfirmed ? "Your account is ready. Return to your app to continue." : "Confirm that this email address belongs to you.",
+        submitLabel: !state.verificationConfirmed && state.linkToken ? "Confirm email address" : "",
+        alternative: !state.verificationConfirmed && !state.linkToken ? {
+          text: "Sign in to your account to request a new verification email."
+        } : null
+      };
+    return {
+      ...empty,
+      heading: "My Fidj account",
+      intro: "Your identity is shared across your apps. Privacy choices remain separate for each app.",
+      status: state.emailVerified ? "Your email address is verified." : "Your email is not verified yet.",
+      alternative: { text: "", href: "#/forgot", label: "Reset my password" },
+      extras: [
+        {
+          id: "check-verification",
+          kind: "secondary",
+          label: "Refresh verification status"
+        },
+        ...state.emailVerified ? [] : [
+          {
+            id: "resend-verification",
+            kind: "secondary",
+            label: "Send verification email"
+          }
+        ]
+      ]
+    };
+  }
+  function credentialsModel(state) {
+    return {
+      email: {
+        id: "email",
+        label: "Email",
+        type: "email",
+        autocomplete: "username",
+        value: state.email,
+        placeholder: "you@company.com"
+      },
+      password: {
+        id: "password",
+        label: "Password",
+        type: "password",
+        autocomplete: "current-password",
+        value: state.password,
+        placeholder: "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"
+      },
+      forgot: { href: "#/forgot", label: "Forgot?" },
+      reveal: { id: "reveal", kind: "quiet", label: "Show" },
+      submit: {
+        id: "entry-credentials",
+        name: "entry",
+        value: "credentials",
+        kind: "primary",
+        label: "Continue"
+      },
+      signup: {
+        id: "entry-signup",
+        name: "signup",
+        value: "true",
+        kind: "secondary",
+        label: "Create an account"
       }
     };
-    retry.addEventListener("click", load);
-    await load();
   }
+  function returnNoticeModel(asking) {
+    return `When you are done, this window closes and takes you back to ${asking}.`;
+  }
+
+  // ../../../entry/dist/remembered.js
   var hintKey = (appId) => "fidj.entry." + appId;
   function signInHint(appId) {
     try {
@@ -10003,7 +10203,8 @@
   }
   function rememberSignIn(appId, label) {
     try {
-      if (label) localStorage.setItem(hintKey(appId), label);
+      if (label)
+        localStorage.setItem(hintKey(appId), label);
     } catch {
     }
   }
@@ -10013,49 +10214,149 @@
     } catch {
     }
   }
+
+  // ../../../entry/dist/dom.js
+  var escape = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
+  var attribute = (name, value) => value === void 0 || value === false || value === "" ? "" : ` ${name}="${escape(value)}"`;
+  var button = (control, extraClass = "") => {
+    const classes = [
+      control.kind === "primary" ? "primary" : control.kind === "secondary" ? "secondary" : "quiet",
+      extraClass
+    ].filter(Boolean).join(" ");
+    const type = control.name ? "submit" : "button";
+    return `<button class="${classes}" type="${type}"${attribute("id", control.name ? "" : control.id)}${attribute("name", control.name)}${attribute("value", control.value)}>${escape(control.label)}</button>`;
+  };
+  function masthead(logo, title) {
+    return `<header class="signin-masthead"><img class="app-mark" src="${escape(logo)}" alt=""><strong>${escape(title)}</strong></header>`;
+  }
+  function highlightCells(entries) {
+    if (!entries?.length)
+      return "";
+    return `<div class="signin-highlights">${entries.map((entry, index) => `<article><p class="eyebrow">${String(index + 1).padStart(2, "0")}</p><h2>${escape(entry.heading)}</h2><p>${escape(entry.body)}</p></article>`).join("")}</div>`;
+  }
+  function badgeStrip(entries) {
+    if (!entries?.length)
+      return "";
+    return `<footer class="signin-badges">${entries.map((entry) => `<span>${escape(entry)}</span>`).join("")}</footer>`;
+  }
+  function credentialFields(state) {
+    const model = credentialsModel(state);
+    return `<label for="email">${escape(model.email.label)}</label><input id="email" type="email" value="${escape(model.email.value)}" placeholder="${escape(model.email.placeholder)}" autocomplete="username"><div class="field-head"><label for="password">${escape(model.password.label)}</label><a href="${escape(model.forgot.href)}">${escape(model.forgot.label)}</a></div><div class="password-field"><input id="password" type="password" value="${escape(model.password.value)}" placeholder="${escape(model.password.placeholder)}" autocomplete="current-password"><button type="button" id="reveal" aria-controls="password">${escape(model.reveal.label)}</button></div><button class="primary" type="submit" name="entry" value="credentials">${escape(model.submit.label)}</button><button class="secondary" type="submit" name="signup" value="true">${escape(model.signup.label)}</button>`;
+  }
+  function accountForm(route, state) {
+    const model = accountModel(route, state);
+    const fields = model.fields.map((field) => `<label for="${escape(field.id)}">${escape(field.label)}</label><input id="${escape(field.id)}" type="${escape(field.type)}"${attribute("autocomplete", field.autocomplete)}${attribute("minlength", field.minlength)}${field.required ? " required" : ""}>`).join("");
+    const form = model.submitLabel ? `<form id="recovery">${fields}${model.hint ? `<p>${escape(model.hint)}</p>` : ""}<button class="primary">${escape(model.submitLabel)}</button></form>` : "";
+    const alternative = model.alternative ? `${model.alternative.text ? `<p>${escape(model.alternative.text)}</p>` : ""}${model.alternative.href ? `<a href="${escape(model.alternative.href)}">${escape(model.alternative.label)}</a>` : ""}` : "";
+    if (route === "forgot" || route === "reset" || route === "verify")
+      return `<h2>${escape(model.heading)}</h2><p>${escape(model.intro)}</p>${form}${alternative}`;
+    return `<h2>${escape(model.heading)}</h2><p class="account-identity">Signed in as <strong>${escape(state.accountEmail)}</strong></p><p>${escape(model.intro)}</p><p id="verification-status">${escape(model.status)}</p>` + model.extras.map((control) => `<button id="${escape(control.id)}">${escape(control.label)}</button>`).join("") + `<p><a href="${escape(model.alternative.href)}">${escape(model.alternative.label)}</a></p>`;
+  }
+  function returnNotice(asking) {
+    return `<p class="signin-return" role="note">${escape(returnNoticeModel(asking))}</p>`;
+  }
   function providerEntry(title, appId, credentials, isFidjItself2 = false, shape = "button") {
-    const escapeText = (value) => String(value ?? "").replace(
-      /[&<>"']/g,
-      (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]
-    );
-    const hint = signInHint(appId);
-    const both = shape === "both" && Boolean(credentials);
-    if (shape === "inline")
-      return `<p class="signin-lead">${isFidjItself2 ? "One account across every app that uses Fidj, and a separate set of choices for each one." : `${escapeText(title)} accounts are Fidj accounts. Sign in below \u2014 ${escapeText(title)} handles your password itself on this page.`}</p>` + agreementMarkup() + credentials;
-    const lead = hint ? `<p class="signin-lead">You signed in here with Fidj before. ${escapeText(title)} accounts are Fidj accounts \u2014 continue as yourself, or use another.</p>` : both ? `<p class="signin-lead">${escapeText(title)} accounts are Fidj accounts. Fidj asks in a window of its own, so this site never sees your password.</p>` : isFidjItself2 ? `<p class="signin-lead">One account across every app that uses Fidj, and a separate set of choices for each one. Fidj asks in a window of its own; this page stays where it is.</p>` : `<p class="signin-lead">${escapeText(title)} accounts are Fidj accounts. You will sign in \u2014 or create yours \u2014 in a Fidj window, so this site never sees your password.</p>`;
-    const fidj = hint ? `<button class="primary fidj-entry" type="submit" name="entry" value="fidj">Continue as ${escapeText(hint)}</button><button type="button" id="forget-hint" class="quiet">Use a different account</button>` : `<button class="primary fidj-entry" type="submit" name="entry" value="fidj">${isFidjItself2 ? "Sign in" : "Sign in with Fidj"}</button>`;
-    if (shape !== "both" || !both) return lead + fidj;
-    return lead + fidj + `<div class="signin-alternate"><button type="button" id="use-email" class="signin-toggle" aria-expanded="false" aria-controls="email-entry"><span class="signin-toggle-label">Inline form<span class="caret" aria-hidden="true"></span></span></button>
-  <div id="email-entry" hidden>${agreementMarkup()}${credentials}</div></div>`;
+    const model = providerEntryModel({
+      title,
+      hint: signInHint(appId),
+      isFidjItself: isFidjItself2,
+      shape,
+      hasCredentials: Boolean(credentials)
+    });
+    const lead = `<p class="signin-lead">${escape(model.lead)}</p>`;
+    if (!model.door)
+      return lead + credentials;
+    const door = button(model.door, "fidj-entry");
+    const forget = model.forget ? `<button type="button" id="${escape(model.forget.id)}" class="quiet">${escape(model.forget.label)}</button>` : "";
+    if (!model.disclosure)
+      return lead + door + forget;
+    return lead + door + forget + `<div class="signin-alternate"><button type="button" id="use-email" class="signin-toggle" aria-expanded="${model.disclosure.expanded}" aria-controls="${escape(model.disclosure.controls)}"><span class="signin-toggle-label">${escape(model.disclosure.label)}<span class="caret" aria-hidden="true"></span></span></button>
+  <div id="${escape(model.disclosure.controls)}" hidden>${credentials}</div></div>`;
+  }
+  function agreementScreen(title, agreement) {
+    const model = agreementModel(title, agreement);
+    return `<h2>${escape(model.heading)}</h2>
+  <p class="signin-lead">${escape(model.lead)}</p>
+  <p class="fineprint">${escape(model.versionLabel)}</p>
+  <div class="agreement-text" tabindex="0">${escape(model.text)}</div>
+  <label class="agreement-choice"><input id="service-agreement" type="checkbox" required aria-required="true" data-version="${escape(model.version)}"><span>${escape(model.checkboxLabel)}</span></label>
+  <button class="primary" type="submit"${model.submitDisabled ? " disabled" : ""}>${escape(model.submitLabel)}</button>`;
+  }
+  function verificationWait(state) {
+    const model = verificationWaitModel(state);
+    const notice = model.notice ? model.notice.kind === "error" ? `<p role="alert" class="error">${escape(model.notice.text)}</p>` : `<p class="fineprint">${escape(model.notice.text)}</p>` : "";
+    return `<div class="verification-wait">
+  <p role="status"><span class="spinner" aria-hidden="true"></span>${escape(model.status)} <strong>${escape(model.email)}</strong>.</p>
+  <p class="fineprint">${escape(model.fineprint)}</p>
+  ${notice}
+  <button type="button" id="resend-verification">${escape(model.resendLabel)}</button>
+  </div>`;
+  }
+  function acceptedAgreement(form) {
+    const checkbox = form.querySelector("#service-agreement");
+    if (!checkbox?.checked || checkbox.disabled || !checkbox.dataset.version)
+      return null;
+    return { termsAccepted: true, termsVersion: checkbox.dataset.version };
+  }
+  function bindAgreementScreen(form) {
+    if (!form)
+      return;
+    const checkbox = form.querySelector("#service-agreement");
+    if (!checkbox)
+      return;
+    const submits = form.querySelectorAll('button[type="submit"]');
+    const update = () => submits.forEach((element2) => {
+      element2.disabled = !checkbox.checked;
+    });
+    checkbox.addEventListener("change", update);
+    update();
   }
   function showEmailEntry(open, focus = false) {
     const fields = document.getElementById("email-entry");
     const toggle = document.getElementById("use-email");
-    if (!fields || !toggle) return;
+    if (!fields || !toggle)
+      return;
     toggle.setAttribute("aria-expanded", String(open));
     fields.hidden = !open;
     const door = document.querySelector(".fidj-entry");
     if (door) {
       door.classList.toggle("is-folded", open);
-      if (open) door.setAttribute("aria-hidden", "true");
-      else door.removeAttribute("aria-hidden");
+      if (open)
+        door.setAttribute("aria-hidden", "true");
+      else
+        door.removeAttribute("aria-hidden");
       door.tabIndex = open ? -1 : 0;
     }
-    if (open && focus) document.getElementById("email")?.focus();
+    if (open && focus)
+      document.getElementById("email")?.focus();
+  }
+  function showVersionBadge(version, apiEndpoint) {
+    if (!/^\d+\.\d+\.\d+(-[\w.]+)?$/.test(version || ""))
+      return;
+    const badge = document.createElement("div");
+    badge.className = "fidj-version";
+    badge.setAttribute("aria-label", `Fidj version ${version}`);
+    badge.textContent = `fidj@${version}`;
+    document.body.append(badge);
+    if (apiEndpoint) {
+      void fetch(`${apiEndpoint.replace(/\/$/, "")}/status`).then((response) => response.ok ? response.json() : null).then((status) => {
+        const apiVersion = status?.version || status?.built;
+        if (!apiVersion)
+          return;
+        badge.textContent = `fidj@${version} \xB7 API ${apiVersion}`;
+        badge.setAttribute("aria-label", `Fidj version ${version}, API version ${apiVersion}`);
+      }).catch(() => void 0);
+    }
   }
 
-  // src/provider-window.ts
+  // ../../../entry/dist/provider-window.js
   var WINDOW_NAME = "fidj-signin-" + Math.random().toString(36).slice(2, 10);
   var CALLBACK = "fidj:oidc-callback";
   function features() {
     const width = Math.min(560, Math.max(320, window.screen.availWidth - 80));
     const height = Math.min(760, Math.max(480, window.screen.availHeight - 80));
-    const left = Math.round(
-      (window.screenX || 0) + Math.max(0, (window.outerWidth - width) / 2)
-    );
-    const top = Math.round(
-      (window.screenY || 0) + Math.max(0, (window.outerHeight - height) / 3)
-    );
+    const left = Math.round((window.screenX || 0) + Math.max(0, (window.outerWidth - width) / 2));
+    const top = Math.round((window.screenY || 0) + Math.max(0, (window.outerHeight - height) / 3));
     return `popup=yes,width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`;
   }
   function openProviderWindow() {
@@ -10065,11 +10366,10 @@
     } catch {
       opened = null;
     }
-    if (!opened) return null;
+    if (!opened)
+      return null;
     try {
-      opened.document.write(
-        '<!doctype html><meta charset="utf-8"><title>Signing in with Fidj</title><body style="margin:0;font:15px/1.5 system-ui;color:#4a4540;display:grid;place-items:center;height:100vh">Opening Fidj\u2026</body>'
-      );
+      opened.document.write('<!doctype html><meta charset="utf-8"><title>Signing in with Fidj</title><body style="margin:0;font:15px/1.5 system-ui;color:#4a4540;display:grid;place-items:center;height:100vh">Opening Fidj\u2026</body>');
       opened.document.close();
     } catch {
     }
@@ -10104,7 +10404,8 @@
         return new Promise((resolve) => {
           let done = false;
           const finish = (result) => {
-            if (done) return;
+            if (done)
+              return;
             done = true;
             window.removeEventListener("message", onMessage);
             window.clearInterval(watch);
@@ -10115,8 +10416,10 @@
             resolve(result);
           };
           const onMessage = (event) => {
-            if (event.origin !== window.location.origin) return;
-            if (event.source !== opened) return;
+            if (event.origin !== window.location.origin)
+              return;
+            if (event.source !== opened)
+              return;
             const data = event.data;
             if (!data || data.fidj !== CALLBACK || typeof data.href !== "string")
               return;
@@ -10126,12 +10429,14 @@
             } catch {
               return;
             }
-            if (callback.origin !== window.location.origin) return;
+            if (callback.origin !== window.location.origin)
+              return;
             finish(callback);
           };
           window.addEventListener("message", onMessage);
           const watch = window.setInterval(() => {
-            if (opened.closed) finish(null);
+            if (opened.closed)
+              finish(null);
           }, 400);
         });
       }
@@ -10144,13 +10449,12 @@
     } catch {
       return false;
     }
-    if (!opener || opener === window || opener.closed) return false;
-    if (!new URL(window.location.href).searchParams.has("state")) return false;
+    if (!opener || opener === window || opener.closed)
+      return false;
+    if (!new URL(window.location.href).searchParams.has("state"))
+      return false;
     try {
-      opener.postMessage(
-        { fidj: CALLBACK, href: window.location.href },
-        window.location.origin
-      );
+      opener.postMessage({ fidj: CALLBACK, href: window.location.href }, window.location.origin);
     } catch {
       return false;
     }
@@ -10171,7 +10475,7 @@
     apiEndpoint: "https://api.fidj.ovh/v3",
     dashboardUrl: "https://fidj.ovh",
     title: "Mat Cloud App",
-    releaseVersion: "3.10.0",
+    releaseVersion: "3.11.0",
     localDemo: false,
     allowAnonymous: false,
     signin: "both",
@@ -10186,24 +10490,6 @@
     moduleMount: null,
     domain: "mlefree.com"
   };
-
-  // src/version.ts
-  function showVersionBadge(version, apiEndpoint) {
-    if (!/^\d+\.\d+\.\d+(-[\w.]+)?$/.test(version || "")) return;
-    const badge = document.createElement("div");
-    badge.className = "fidj-version";
-    badge.setAttribute("aria-label", `Fidj version ${version}`);
-    badge.textContent = `fidj@${version}`;
-    document.body.append(badge);
-    if (apiEndpoint) {
-      void fetch(`${apiEndpoint.replace(/\/$/, "")}/status`).then((response) => response.ok ? response.json() : null).then((status) => {
-        const apiVersion = status?.version || status?.built;
-        if (!apiVersion) return;
-        badge.textContent = `fidj@${version} \xB7 API ${apiVersion}`;
-        badge.setAttribute("aria-label", `Fidj version ${version}, API version ${apiVersion}`);
-      }).catch(() => void 0);
-    }
-  }
 
   // src/content.ts
   var sdk = new import_node.FidjNodeService();
@@ -10225,7 +10511,10 @@
   var leaving = false;
   var signInEmail = "";
   var signInPassword = "";
-  var signInAgreementAccepted = false;
+  var pendingAgreement = null;
+  var awaitingVerification = "";
+  var verificationResent = false;
+  var verificationNotice = "";
   var accountEmail = "";
   var emailEntryOpen = false;
   var accountRoutes = ["forgot", "reset", "verify", "account"];
@@ -10240,16 +10529,7 @@
     }
     return route;
   }
-  var escape = (value) => String(value ?? "").replace(
-    /[&<>"']/g,
-    (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]
-  );
   var element = (id) => document.getElementById(id);
-  function badges() {
-    const entries = app_config_default.badges;
-    if (!entries?.length) return "";
-    return `<footer class="signin-badges">${entries.map((entry) => `<span>${escape(entry)}</span>`).join("")}</footer>`;
-  }
   var leftTheApp = false;
   function banner() {
     if (!message) return "";
@@ -10297,13 +10577,6 @@
         navigate("signin");
       })
     );
-  }
-  function highlights() {
-    const entries = app_config_default.highlights;
-    if (!entries?.length) return "";
-    return `<div class="signin-highlights">${entries.map(
-      (entry, index) => `<article><p class="eyebrow">${String(index + 1).padStart(2, "0")}</p><h2>${escape(entry.heading)}</h2><p>${escape(entry.body)}</p></article>`
-    ).join("")}</div>`;
   }
   async function request(path, method = "GET", data) {
     const token = await sdk.fidjGetIdToken();
@@ -10411,6 +10684,7 @@
   function mightBeRecognised() {
     if (!oidc || !isFidjItself) return false;
     if ((moduleRoute() || "").split("/")[0] === PUBLIC_ROUTE) return false;
+    if (["forgot", "reset", "verify"].includes(currentRoute())) return false;
     if (oidc.signedOutHere()) return false;
     try {
       return sessionStorage.getItem(RECOGNITION_ASKED) !== "true";
@@ -10422,6 +10696,7 @@
     if (!oidc || !isFidjItself || sdk.isLoggedIn() || oidc.signedOutHere())
       return false;
     if ((moduleRoute() || "").split("/")[0] === PUBLIC_ROUTE) return false;
+    if (["forgot", "reset", "verify"].includes(currentRoute())) return false;
     try {
       if (sessionStorage.getItem(RECOGNITION_ASKED) === "true") return false;
       sessionStorage.setItem(RECOGNITION_ASKED, "true");
@@ -10477,9 +10752,6 @@
   function navigate(route) {
     if (route !== currentRoute()) window.history.pushState(null, "", "#/" + route);
     if (!busy) render();
-  }
-  function credentialFields() {
-    return `<label for="email">Email</label><input id="email" type="email" value="${escape(signInEmail)}" placeholder="you@company.com" autocomplete="username"><div class="field-head"><label for="password">Password</label><a href="#/forgot">Forgot?</a></div><div class="password-field"><input id="password" type="password" value="${escape(signInPassword)}" placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" autocomplete="current-password"><button type="button" id="reveal" aria-controls="password">Show</button></div><button class="primary" type="submit" name="entry" value="credentials">Continue</button><button class="secondary" type="submit" name="signup" value="true">Create an account</button>`;
   }
   function moduleRoute() {
     const route = window.location.hash.slice(2).split("?")[0];
@@ -10565,7 +10837,7 @@
       return;
     }
     if (route === "account") {
-      root.innerHTML = `<section class="card content-account">${banner()}${accountForm("account")}${privacyBlock()}<div class="account-actions"><button id="continue-app" class="primary">Continue to ${escape(app_config_default.title)}</button><button id="exit">Sign out</button></div></section>`;
+      root.innerHTML = `<section class="card content-account">${banner()}${accountForm("account", { linkToken, verificationConfirmed, emailVerified, accountEmail })}${privacyBlock()}<div class="account-actions"><button id="continue-app" class="primary">Continue to ${escape(app_config_default.title)}</button><button id="exit">Sign out</button></div></section>`;
       renderNav("account");
       wireAccount("account");
       wireSignOut();
@@ -10586,20 +10858,20 @@
       root.innerHTML = `<section class="signin-shell"><div class="signin-form"><p role="status">Checking whether you are already signed in to Fidj\u2026</p></div></section>`;
       return;
     }
-    root.innerHTML = `<section class="signin-shell"><div class="signin-intro${app_config_default.highlights?.length ? "" : " is-plain"}"><header class="signin-masthead"><img class="app-mark" src="${escape(app_config_default.logo)}" alt=""><strong>${escape(app_config_default.title)}</strong></header>
+    root.innerHTML = `<section class="signin-shell"><div class="signin-intro${app_config_default.highlights?.length ? "" : " is-plain"}">${masthead(app_config_default.logo, app_config_default.title)}
   <div class="signin-identity"><h1>${escape(app_config_default.welcome)}</h1><p class="signin-description">${escape(app_config_default.description)}</p></div>
-  ${highlights()}</div>
-  <div class="signin-form"><div>${banner()}<h2>Sign in to ${escape(app_config_default.title)}</h2><form id="signin"><label for="email">Email</label><input id="email" type="email" value="${escape(signInEmail)}" placeholder="you@company.com" autocomplete="username" required><div class="field-head"><label for="password">Password</label><a href="#/forgot">Forgot?</a></div><div class="password-field"><input id="password" type="password" value="${escape(signInPassword)}" placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" autocomplete="current-password" required><button type="button" id="reveal" aria-controls="password">Show</button></div>${agreementMarkup()}<button class="primary" type="submit">Continue</button><button class="secondary" type="submit" name="signup" value="true">Create an account</button></form>${app_config_default.allowAnonymous ? `<div class="signin-divider"><span>or explore first</span></div><button class="anonymous-entry" id="anonymous">Enter anonymously <span aria-hidden="true">\u2192</span></button><p class="signin-footnote">No account needed to view the content.</p>` : ""}
+  ${highlightCells(app_config_default.highlights)}</div>
+  <div class="signin-form"><div>${banner()}<h2>Sign in to ${escape(app_config_default.title)}</h2><form id="signin"><label for="email">Email</label><input id="email" type="email" value="${escape(signInEmail)}" placeholder="you@company.com" autocomplete="username" required><div class="field-head"><label for="password">Password</label><a href="#/forgot">Forgot?</a></div><div class="password-field"><input id="password" type="password" value="${escape(signInPassword)}" placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" autocomplete="current-password" required><button type="button" id="reveal" aria-controls="password">Show</button></div><button class="primary" type="submit">Sign in</button><button class="secondary" type="submit" name="signup" value="true">Create an account</button></form>${app_config_default.allowAnonymous ? `<div class="signin-divider"><span>or explore first</span></div><button class="anonymous-entry" id="anonymous">Enter anonymously <span aria-hidden="true">\u2192</span></button><p class="signin-footnote">No account needed to view the content.</p>` : ""}
   <div class="signin-trust"><p class="signin-trust-head"><img class="signin-logo" src="./fidj-logo.png" alt="Fidj"><strong>Your account, with Fidj</strong></p><p>Signing in creates one Fidj account you keep across every app that uses Fidj.</p><p>You choose what this app may store \u2014 and can export or erase it at any moment.</p></div></div>
-  ${badges()}</div></section>`;
+  ${badgeStrip(app_config_default.badges)}</div></section>`;
     wireNav();
     element("reveal")?.addEventListener("click", () => {
       const field = element("password");
-      const button = element("reveal");
-      if (!field || !button) return;
+      const button2 = element("reveal");
+      if (!field || !button2) return;
       const hidden = field.type === "password";
       field.type = hidden ? "text" : "password";
-      button.textContent = hidden ? "Hide" : "Show";
+      button2.textContent = hidden ? "Hide" : "Show";
     });
     element("anonymous")?.addEventListener("click", () => {
       if (!app_config_default.allowAnonymous) return;
@@ -10611,11 +10883,15 @@
       element("signin").innerHTML = providerEntry(
         app_config_default.title,
         app_config_default.appId,
-        app_config_default.signin === "button" ? "" : credentialFields(),
+        app_config_default.signin === "button" ? "" : credentialFields({ email: signInEmail, password: signInPassword }),
         isFidjItself,
         app_config_default.signin
       );
-    if (emailEntryOpen) showEmailEntry(true);
+    if (pendingAgreement && element("signin")) {
+      element("signin").innerHTML = agreementScreen(app_config_default.title, pendingAgreement);
+      bindAgreementScreen(element("signin"));
+    }
+    if (!pendingAgreement && emailEntryOpen) showEmailEntry(true);
     element("use-email")?.addEventListener("click", () => {
       emailEntryOpen = !emailEntryOpen;
       showEmailEntry(emailEntryOpen, true);
@@ -10628,25 +10904,50 @@
       }
       render();
     });
-    void bindAgreement(element("signin"), app_config_default.title, app_config_default.apiEndpoint, app_config_default.appId, signInAgreementAccepted);
+    if (awaitingVerification)
+      element("signin")?.insertAdjacentHTML(
+        "beforeend",
+        verificationWait({
+          email: awaitingVerification,
+          resent: verificationResent,
+          error: verificationNotice
+        })
+      );
+    element("resend-verification")?.addEventListener(
+      "click",
+      () => void action(async () => {
+        verificationResent = false;
+        verificationNotice = "";
+        try {
+          await sdk.resendVerification();
+          verificationResent = true;
+        } catch {
+          verificationNotice = "Press Create an account again to send another link.";
+        }
+      })
+    );
     element("signin")?.addEventListener("submit", (event) => {
       event.preventDefault();
       const email = element("email")?.value || "";
       const password = element("password")?.value || "";
-      const agreement = element("service-agreement");
-      signInEmail = email;
-      signInPassword = password;
-      signInAgreementAccepted = agreement?.checked === true;
-      const acceptance = acceptedAgreement(event.currentTarget);
       const submitter = event.submitter;
-      const signup = submitter?.name === "signup";
-      const throughFidj = submitter?.name === "entry" && submitter.value === "fidj";
-      if (!throughFidj && !acceptance) {
-        failed = true;
-        message = "Please accept the service agreement before continuing.";
-        render();
+      if (pendingAgreement) {
+        const acceptance2 = acceptedAgreement(
+          event.currentTarget
+        );
+        if (!acceptance2) return;
+        submitter?.setAttribute("data-busy", "true");
+        void action(async () => {
+          if (await refusedBeforeSignIn(signInEmail, signInPassword, false, acceptance2))
+            return;
+          await completeSignIn();
+        });
         return;
       }
+      signInEmail = email;
+      signInPassword = password;
+      const signup = submitter?.name === "signup";
+      const throughFidj = submitter?.name === "entry" && submitter.value === "fidj";
       if (oidc && throughFidj) {
         try {
           const remembered = signInHint(app_config_default.appId);
@@ -10661,29 +10962,67 @@
         if (oidc && (!email || !password)) {
           throw new Error("Enter your email and password, or sign in with Fidj.");
         }
-        try {
-          await sdk.login(email, password, { autoSignup: signup, ...acceptance });
-        } catch (error) {
-          throw new Error(signInErrorMessage(error));
-        }
-        if (isFidjItself) {
-          try {
-            await sdk.sendOnEndpoint({
-              verb: "POST",
-              key: "me",
-              relativePath: "oidc/session",
-              // The whole point of the call is the cookie it comes back with, and
-              // a cross-origin response's Set-Cookie is dropped without this.
-              withCredentials: true
-            });
-          } catch {
-          }
-        }
-        await refresh();
-        anonymous = false;
-        navigate("content");
+        if (await refusedBeforeSignIn(email, password, signup)) return;
+        await completeSignIn();
       });
     });
+  }
+  async function refusedBeforeSignIn(email, password, signup, acceptance2) {
+    try {
+      await sdk.login(email, password, { autoSignup: signup, ...acceptance2 });
+      pendingAgreement = null;
+      awaitingVerification = "";
+      return false;
+    } catch (error) {
+      const created = verificationPending(error);
+      if (created) {
+        awaitingVerification = created.email || email;
+        verificationResent = false;
+        verificationNotice = "";
+        return true;
+      }
+      if (agreementRequired(error)) {
+        pendingAgreement = agreementFromRefusal(error) || await readAgreement();
+        if (!pendingAgreement) {
+          throw new Error("We cannot reach Fidj right now. Please try again.");
+        }
+        return true;
+      }
+      throw new Error(signInErrorMessage(error));
+    }
+  }
+  async function readAgreement() {
+    try {
+      const response = await fetch(
+        `${app_config_default.apiEndpoint}/apps/${encodeURIComponent(app_config_default.appId)}`,
+        { signal: AbortSignal.timeout(1e4) }
+      );
+      if (!response.ok) return null;
+      const agreement = (await response.json()).app?.agreement;
+      return typeof agreement?.version === "string" && agreement.version && typeof agreement?.text === "string" && agreement.text ? { version: agreement.version, text: agreement.text } : null;
+    } catch {
+      return null;
+    }
+  }
+  function completeSignIn() {
+    return (async () => {
+      if (isFidjItself) {
+        try {
+          await sdk.sendOnEndpoint({
+            verb: "POST",
+            key: "me",
+            relativePath: "oidc/session",
+            // The whole point of the call is the cookie it comes back with, and
+            // a cross-origin response's Set-Cookie is dropped without this.
+            withCredentials: true
+          });
+        } catch {
+        }
+      }
+      await refresh();
+      anonymous = false;
+      navigate("content");
+    })();
   }
   function wirePrivacy() {
     element("refresh")?.addEventListener("click", () => void action(refresh));
@@ -10774,9 +11113,6 @@
   ${roles.includes("Owner") ? "<p>Resolve app ownership before leaving.</p>" : leaving ? '<p>Confirm departure: your membership and its Fidj-held data will be removed. Your other apps remain available.</p><button id="confirm-leave" class="danger">Confirm leaving this app</button><button id="cancel-leave">Keep my membership</button>' : '<button id="leave" class="danger">Leave this app</button>'}
   <p class="leaving"><a href="${escape(app_config_default.dashboardUrl)}/#/my" target="_blank" rel="noopener">Open Fidj to manage every app you use \u2197</a><br><small>Fidj is the account provider behind ${escape(app_config_default.title)}. This opens it in a new tab; you stay signed in here.</small></p>`;
   }
-  function accountForm(route) {
-    return route === "forgot" ? `<h2>Reset your password</h2><p>We\u2019ll email you a link to choose a new password for your shared Fidj account.</p><form id="recovery"><label for="recovery-email">Email address</label><input id="recovery-email" type="email" autocomplete="email" required><button class="primary">Send reset link</button></form>` : route === "reset" ? `<h2>Choose a new password</h2><p>This changes your Fidj password across all your apps and signs out existing sessions.</p>${linkToken ? '<form id="recovery"><label for="new-password">New password</label><input id="new-password" type="password" autocomplete="new-password" minlength="12" required><label for="confirm-password">Confirm password</label><input id="confirm-password" type="password" autocomplete="new-password" minlength="12" required><p>Use at least 12 characters (up to 72 UTF-8 bytes).</p><button class="primary">Save new password</button></form>' : '<p>Request a new link if you no longer have an active reset link.</p><a href="#/forgot">Request a reset link</a>'}` : route === "verify" ? `<h2>${verificationConfirmed ? "Email verified" : "Verify your email"}</h2>${verificationConfirmed ? "<p>Your account is ready. Return to your app to continue.</p>" : "<p>Confirm that this email address belongs to you.</p>"}${verificationConfirmed ? "" : linkToken ? '<form id="recovery"><button class="primary">Confirm email address</button></form>' : "<p>Sign in to your account to request a new verification email.</p>"}` : `<h2>My Fidj account</h2><p class="account-identity">Signed in as <strong>${escape(accountEmail)}</strong></p><p>Your identity is shared across your apps. Privacy choices remain separate for each app.</p><p id="verification-status">${emailVerified ? "Your email address is verified." : "Your email is not verified yet."}</p><button id="check-verification">Refresh verification status</button>${emailVerified ? "" : '<button id="resend-verification">Send verification email</button>'}<p><a href="#/forgot">Reset my password</a></p>`;
-  }
   var interactionId = "";
   var interactionError = "";
   var interaction = null;
@@ -10827,9 +11163,6 @@
     if (!response.ok) throw new Error("This sign-in has expired. Start again from the app.");
     interaction = await response.json();
   }
-  function returnNotice(asking) {
-    return `<p class="signin-return" role="note">When you are done, this window closes and takes you back to ${escape(asking)}.</p>`;
-  }
   function interactionScreen() {
     const details = interaction;
     const asking = escape(details.app.title);
@@ -10866,19 +11199,19 @@
     <button class="quiet" type="submit" id="not-me" name="action" value="switch" formnovalidate>Not you? Sign in with another account</button>
     <button class="quiet" type="submit" name="action" value="cancel" formnovalidate>Cancel and go back</button>
   </form>`;
-    root.innerHTML = `<section class="signin-shell"><div class="signin-intro is-plain"><header class="signin-masthead"><img class="app-mark" src="${escape(app_config_default.logo)}" alt=""><strong>${escape(app_config_default.title)}</strong></header>
+    root.innerHTML = `<section class="signin-shell"><div class="signin-intro is-plain">${masthead(app_config_default.logo, app_config_default.title)}
   <div class="signin-identity"><h1>Your identity.<br>Your choices.</h1><p class="signin-description">One account across every app that uses Fidj, and a separate set of choices for each one.</p></div>
-  ${highlights()}</div>
+  ${highlightCells(app_config_default.highlights)}</div>
   <div class="signin-form"><div>${body}</div>
   <div class="signin-trust"><p class="signin-trust-head"><img class="signin-logo" src="./fidj-logo.png" alt="Fidj"><strong>What Fidj is</strong></p><p>Fidj holds your account so each app does not have to. You can see every app you use, what it holds, and take it back \u2014 at any time.</p></div></div>
-  ${badges()}</section>`;
+  ${badgeStrip(app_config_default.badges)}</section>`;
     element("reveal")?.addEventListener("click", () => {
       const field = element("password");
-      const button = element("reveal");
-      if (!field || !button) return;
+      const button2 = element("reveal");
+      if (!field || !button2) return;
       const hidden = field.type === "password";
       field.type = hidden ? "text" : "password";
-      button.textContent = hidden ? "Hide" : "Show";
+      button2.textContent = hidden ? "Hide" : "Show";
     });
     element("not-me")?.addEventListener("click", () => {
       forgetSignIn(app_config_default.appId);
@@ -10897,10 +11230,10 @@
     });
   }
   function renderAccount(route) {
-    root.innerHTML = `<section class="signin-shell"><div class="signin-intro is-plain"><header class="signin-masthead"><img class="app-mark" src="${escape(app_config_default.logo)}" alt=""><strong>${escape(app_config_default.title)}</strong></header>
+    root.innerHTML = `<section class="signin-shell"><div class="signin-intro is-plain">${masthead(app_config_default.logo, app_config_default.title)}
   <div class="signin-identity"><h1>Your account.<br>Your control.</h1><p class="signin-description">Secure access to the apps you use, with one Fidj identity.</p></div>
   </div>
-  <div class="signin-form"><div>${banner()}${accountForm(route)}</div><footer class="signin-badges"><a href="#/signin">Back to sign in</a></footer></div></section>`;
+  <div class="signin-form"><div>${banner()}${accountForm(route, { linkToken, verificationConfirmed, emailVerified, accountEmail })}</div><footer class="signin-badges"><a href="#/signin">Back to sign in</a></footer></div></section>`;
     wireAccount(route);
   }
   function wireAccount(route) {
