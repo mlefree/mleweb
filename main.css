@@ -1016,7 +1016,7 @@ body.has-module {
   padding: 8px 12px;
   font-size: 13.5px;
   color: var(--fidj-on-ink-faint);
-  border-bottom: 0;
+  border-bottom: 2px solid transparent;
   white-space: nowrap;
 }
 .topbar .content-nav button:hover:not(:disabled) {
@@ -1025,6 +1025,7 @@ body.has-module {
 .topbar .content-nav button.selected {
   color: var(--fidj-on-ink);
   font-weight: 600;
+  border-bottom-color: var(--fidj-on-ink);
 }
 .topbar .content-nav button:last-child {
   margin-left: 0;
@@ -1230,6 +1231,19 @@ summary:focus-visible {
 #agreement-text {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
+.agreement-text {
+  max-height: 12rem;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid var(--fidj-line-soft);
+  border-radius: var(--fidj-radius);
+  background: var(--fidj-surface-sunk);
+  font-size: 13px;
+  line-height: 1.55;
 }
 .signin-lead {
   margin: 0 0 18px;

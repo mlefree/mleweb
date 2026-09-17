@@ -6930,11 +6930,12 @@
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.FidjOidcClient = void 0;
       var oauth = __importStar((init_build(), __toCommonJS(build_exports)));
+      var localHostname = (hostname) => hostname === "localhost" || hostname === "127.0.0.1" || hostname.endsWith(".localhost");
       var FidjOidcClient2 = class {
         constructor(options) {
           this.options = options;
           const issuer = new URL(options.issuer), api = new URL(options.apiEndpoint), redirect = new URL(options.redirectUri);
-          if (issuer.origin !== api.origin || issuer.pathname !== "/oidc" || issuer.search || issuer.hash || issuer.username || issuer.password || issuer.protocol !== "https:" && !["localhost", "127.0.0.1"].includes(issuer.hostname) || redirect.hash || redirect.username || redirect.password || redirect.protocol !== "https:" && !["localhost", "127.0.0.1"].includes(redirect.hostname)) {
+          if (issuer.origin !== api.origin || issuer.pathname !== "/oidc" || issuer.search || issuer.hash || issuer.username || issuer.password || issuer.protocol !== "https:" && !localHostname(issuer.hostname) || redirect.hash || redirect.username || redirect.password || redirect.protocol !== "https:" && !localHostname(redirect.hostname)) {
             throw new Error("Use a trusted issuer/API origin and an exact HTTPS callback (loopback allowed for development).");
           }
           this.prefix = "fidj.oidc." + options.clientId;
@@ -7163,9 +7164,7 @@
             } finally {
               this.clear();
             }
-            if (options.endProviderSession) {
-              this.options.storage.setItem(this.prefix + ".signedOut", "true");
-            }
+            this.options.storage.setItem(this.prefix + ".signedOut", "true");
             return confirmed ? void 0 : endSession;
           });
         }
@@ -7591,7 +7590,7 @@
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.bpInfo = void 0;
-      exports.bpInfo = { version: "v3.11.0" };
+      exports.bpInfo = { version: "v3.13.0" };
     }
   });
 
@@ -9899,7 +9898,7 @@
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.bpInfo = void 0;
-      exports.bpInfo = { version: "v3.11.0" };
+      exports.bpInfo = { version: "v3.13.0" };
     }
   });
 
@@ -10243,9 +10242,25 @@
     const model = credentialsModel(state);
     return `<label for="email">${escape(model.email.label)}</label><input id="email" type="email" value="${escape(model.email.value)}" placeholder="${escape(model.email.placeholder)}" autocomplete="username"><div class="field-head"><label for="password">${escape(model.password.label)}</label><a href="${escape(model.forgot.href)}">${escape(model.forgot.label)}</a></div><div class="password-field"><input id="password" type="password" value="${escape(model.password.value)}" placeholder="${escape(model.password.placeholder)}" autocomplete="current-password"><button type="button" id="reveal" aria-controls="password">${escape(model.reveal.label)}</button></div><button class="primary" type="submit" name="entry" value="credentials">${escape(model.submit.label)}</button><button class="secondary" type="submit" name="signup" value="true">${escape(model.signup.label)}</button>`;
   }
+  function bindPasswordReveal(root2) {
+    root2.querySelectorAll("button[aria-controls]").forEach((button2) => {
+      const fieldId = button2.getAttribute("aria-controls");
+      const field = fieldId ? root2.querySelector(`#${fieldId}`) : null;
+      if (!field || field.type !== "password")
+        return;
+      button2.onclick = () => {
+        const hidden = field.type === "password";
+        field.type = hidden ? "text" : "password";
+        button2.textContent = hidden ? "Hide" : "Show";
+      };
+    });
+  }
   function accountForm(route, state) {
     const model = accountModel(route, state);
-    const fields = model.fields.map((field) => `<label for="${escape(field.id)}">${escape(field.label)}</label><input id="${escape(field.id)}" type="${escape(field.type)}"${attribute("autocomplete", field.autocomplete)}${attribute("minlength", field.minlength)}${field.required ? " required" : ""}>`).join("");
+    const fields = model.fields.map((field) => {
+      const input = `<input id="${escape(field.id)}" type="${escape(field.type)}"${attribute("autocomplete", field.autocomplete)}${attribute("minlength", field.minlength)}${field.required ? " required" : ""}>`;
+      return `<label for="${escape(field.id)}">${escape(field.label)}</label>${field.type === "password" ? `<div class="password-field">${input}<button type="button" aria-controls="${escape(field.id)}">Show</button></div>` : input}`;
+    }).join("");
     const form = model.submitLabel ? `<form id="recovery">${fields}${model.hint ? `<p>${escape(model.hint)}</p>` : ""}<button class="primary">${escape(model.submitLabel)}</button></form>` : "";
     const alternative = model.alternative ? `${model.alternative.text ? `<p>${escape(model.alternative.text)}</p>` : ""}${model.alternative.href ? `<a href="${escape(model.alternative.href)}">${escape(model.alternative.label)}</a>` : ""}` : "";
     if (route === "forgot" || route === "reset" || route === "verify")
@@ -10273,13 +10288,12 @@
     return lead + door + forget + `<div class="signin-alternate"><button type="button" id="use-email" class="signin-toggle" aria-expanded="${model.disclosure.expanded}" aria-controls="${escape(model.disclosure.controls)}"><span class="signin-toggle-label">${escape(model.disclosure.label)}<span class="caret" aria-hidden="true"></span></span></button>
   <div id="${escape(model.disclosure.controls)}" hidden>${credentials}</div></div>`;
   }
-  function agreementScreen(title, agreement) {
+  function agreementScreen(title, agreement, href) {
     const model = agreementModel(title, agreement);
     return `<h2>${escape(model.heading)}</h2>
   <p class="signin-lead">${escape(model.lead)}</p>
-  <p class="fineprint">${escape(model.versionLabel)}</p>
   <div class="agreement-text" tabindex="0">${escape(model.text)}</div>
-  <label class="agreement-choice"><input id="service-agreement" type="checkbox" required aria-required="true" data-version="${escape(model.version)}"><span>${escape(model.checkboxLabel)}</span></label>
+  <label class="agreement-choice"><input id="service-agreement" type="checkbox" required aria-required="true" data-version="${escape(model.version)}"><span>I accept the <a class="agreement-document" href="${escape(href)}" target="fidj-agreement" rel="noopener">service agreement \xB7 ${escape(model.versionLabel)} \u2197</a></span></label>
   <button class="primary" type="submit"${model.submitDisabled ? " disabled" : ""}>${escape(model.submitLabel)}</button>`;
   }
   function verificationWait(state) {
@@ -10309,6 +10323,11 @@
       element2.disabled = !checkbox.checked;
     });
     checkbox.addEventListener("change", update);
+    const agreementLink = form.querySelector(".agreement-document");
+    agreementLink?.addEventListener("click", (event) => {
+      event.preventDefault();
+      window.open(agreementLink.href, "fidj-agreement", "popup,width=640,height=720,left=40,top=40,noopener");
+    });
     update();
   }
   function showEmailEntry(open, focus = false) {
@@ -10318,6 +10337,9 @@
       return;
     toggle.setAttribute("aria-expanded", String(open));
     fields.hidden = !open;
+    const forget = document.getElementById("forget-hint");
+    if (forget)
+      forget.hidden = open;
     const door = document.querySelector(".fidj-entry");
     if (door) {
       door.classList.toggle("is-folded", open);
@@ -10475,7 +10497,7 @@
     apiEndpoint: "https://api.fidj.ovh/v3",
     dashboardUrl: "https://fidj.ovh",
     title: "Mat Cloud App",
-    releaseVersion: "3.11.0",
+    releaseVersion: "3.13.0",
     localDemo: false,
     allowAnonymous: false,
     signin: "both",
@@ -10566,7 +10588,10 @@
       "click",
       () => void action(async () => {
         const wasSignedIn = signedIn;
-        if (signedIn) await sdk.logout(true);
+        if (signedIn) {
+          if (oidc?.hasSession()) await oidc.logout();
+          else await sdk.logout(true);
+        }
         forgetSignIn(app_config_default.appId);
         signedIn = false;
         anonymous = false;
@@ -10787,6 +10812,8 @@
     if (interactionId && !addressedInteraction()) {
       interactionId = "";
       interactionError = "";
+      interactionResent = false;
+      interactionNotYet = false;
       interaction = null;
       interactionFailed = false;
     }
@@ -10861,18 +10888,10 @@
     root.innerHTML = `<section class="signin-shell"><div class="signin-intro${app_config_default.highlights?.length ? "" : " is-plain"}">${masthead(app_config_default.logo, app_config_default.title)}
   <div class="signin-identity"><h1>${escape(app_config_default.welcome)}</h1><p class="signin-description">${escape(app_config_default.description)}</p></div>
   ${highlightCells(app_config_default.highlights)}</div>
-  <div class="signin-form"><div>${banner()}<h2>Sign in to ${escape(app_config_default.title)}</h2><form id="signin"><label for="email">Email</label><input id="email" type="email" value="${escape(signInEmail)}" placeholder="you@company.com" autocomplete="username" required><div class="field-head"><label for="password">Password</label><a href="#/forgot">Forgot?</a></div><div class="password-field"><input id="password" type="password" value="${escape(signInPassword)}" placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" autocomplete="current-password" required><button type="button" id="reveal" aria-controls="password">Show</button></div><button class="primary" type="submit">Sign in</button><button class="secondary" type="submit" name="signup" value="true">Create an account</button></form>${app_config_default.allowAnonymous ? `<div class="signin-divider"><span>or explore first</span></div><button class="anonymous-entry" id="anonymous">Enter anonymously <span aria-hidden="true">\u2192</span></button><p class="signin-footnote">No account needed to view the content.</p>` : ""}
+  <div class="signin-form"><div>${banner()}<h2>Sign in to ${escape(app_config_default.title)}</h2><form id="signin">${credentialFields({ email: signInEmail, password: signInPassword })}</form>${app_config_default.allowAnonymous ? `<div class="signin-divider"><span>or explore first</span></div><button class="anonymous-entry" id="anonymous">Enter anonymously <span aria-hidden="true">\u2192</span></button><p class="signin-footnote">No account needed to view the content.</p>` : ""}
   <div class="signin-trust"><p class="signin-trust-head"><img class="signin-logo" src="./fidj-logo.png" alt="Fidj"><strong>Your account, with Fidj</strong></p><p>Signing in creates one Fidj account you keep across every app that uses Fidj.</p><p>You choose what this app may store \u2014 and can export or erase it at any moment.</p></div></div>
   ${badgeStrip(app_config_default.badges)}</div></section>`;
     wireNav();
-    element("reveal")?.addEventListener("click", () => {
-      const field = element("password");
-      const button2 = element("reveal");
-      if (!field || !button2) return;
-      const hidden = field.type === "password";
-      field.type = hidden ? "text" : "password";
-      button2.textContent = hidden ? "Hide" : "Show";
-    });
     element("anonymous")?.addEventListener("click", () => {
       if (!app_config_default.allowAnonymous) return;
       anonymous = true;
@@ -10888,10 +10907,11 @@
         app_config_default.signin
       );
     if (pendingAgreement && element("signin")) {
-      element("signin").innerHTML = agreementScreen(app_config_default.title, pendingAgreement);
+      element("signin").innerHTML = agreementScreen(app_config_default.title, pendingAgreement, `${app_config_default.apiEndpoint}/apps/${encodeURIComponent(app_config_default.appId)}/agreements/${encodeURIComponent(pendingAgreement.version || "")}`);
       bindAgreementScreen(element("signin"));
     }
     if (!pendingAgreement && emailEntryOpen) showEmailEntry(true);
+    if (!pendingAgreement && element("signin")) bindPasswordReveal(element("signin"));
     element("use-email")?.addEventListener("click", () => {
       emailEntryOpen = !emailEntryOpen;
       showEmailEntry(emailEntryOpen, true);
@@ -11008,14 +11028,9 @@
     return (async () => {
       if (isFidjItself) {
         try {
-          await sdk.sendOnEndpoint({
-            verb: "POST",
-            key: "me",
-            relativePath: "oidc/session",
-            // The whole point of the call is the cookie it comes back with, and
-            // a cross-origin response's Set-Cookie is dropped without this.
-            withCredentials: true
-          });
+          const transfer = await request("/me/oidc/session-transfer", "POST");
+          window.location.assign(transfer.location);
+          return;
         } catch {
         }
       }
@@ -11115,6 +11130,8 @@
   }
   var interactionId = "";
   var interactionError = "";
+  var interactionResent = false;
+  var interactionNotYet = false;
   var interaction = null;
   var interactionFailed = false;
   var scopeMeaning = {
@@ -11148,6 +11165,8 @@
     if (!uid) return false;
     interactionId = uid;
     interactionError = parameters.get("error") || "";
+    interactionResent = parameters.get("resent") === "1";
+    interactionNotYet = parameters.get("notyet") === "1";
     return true;
   }
   async function loadInteraction() {
@@ -11163,6 +11182,13 @@
     if (!response.ok) throw new Error("This sign-in has expired. Start again from the app.");
     interaction = await response.json();
   }
+  function interactionWaitNotice() {
+    if (interactionNotYet)
+      return '<p class="fineprint">The link has not been opened yet. Open it, then press Continue again.</p>';
+    if (interactionResent)
+      return '<p class="fineprint">The link was sent again. Only the newest one works.</p>';
+    return "";
+  }
   function interactionScreen() {
     const details = interaction;
     const asking = escape(details.app.title);
@@ -11174,7 +11200,17 @@
     } catch {
     }
     const itself = details.app.id === app_config_default.appId;
-    const body = details.prompt === "login" ? `<h2>${itself ? "Sign in to Fidj" : "Sign in to continue to " + asking}</h2>
+    const body = details.awaiting ? `<h2>Check your email</h2>
+  <p class="signin-lead">Your account is created. Waiting for you to open the link sent to <strong>${escape(details.awaiting)}</strong>.</p>
+  ${returnNotice(itself ? "Fidj" : asking)}
+  <form method="post" action="${escape(action2)}" id="interaction">
+    <input type="hidden" name="csrf" value="${escape(details.csrf)}">
+    <p class="fineprint">The link may take a minute, and it sometimes lands in spam. Open it, then come back here.</p>
+    ${interactionWaitNotice()}
+    <button class="primary" type="submit" name="action" value="continue">Continue</button>
+    <button class="secondary" type="submit" name="action" value="resend">Send the link again</button>
+    <button class="quiet" type="submit" name="action" value="cancel" formnovalidate>Cancel and go back</button>
+  </form>` : details.prompt === "login" ? `<h2>${itself ? "Sign in to Fidj" : "Sign in to continue to " + asking}</h2>
   <p class="signin-lead">${itself ? "One account across every app that uses Fidj, and a separate set of choices for each one." : `This is Fidj, the account behind ${asking}. One account, and separate choices for every app that uses it \u2014 ${asking} never sees your password.`}</p>
   ${returnNotice(itself ? "Fidj" : asking)}
   ${notice}
@@ -11193,7 +11229,8 @@
   <ul class="scope-list">${details.scopes.filter((scope) => scopeMeaning[scope]).map((scope) => `<li>${escape(scopeMeaning[scope])}</li>`).join("")}</ul>
   <form method="post" action="${escape(action2)}" id="interaction">
     <input type="hidden" name="csrf" value="${escape(details.csrf)}">
-    <label class="agreement-choice"><input type="checkbox" name="terms" value="true" required><span>I accept ${asking}'s service agreement.</span></label>
+    <label class="agreement-choice"><input type="checkbox" name="terms" value="true" required><span>${escape(agreementModel(details.app.title, {}).checkboxLabel)}</span></label>
+    ${details.agreement ? `<details class="agreement"><summary>Read service agreement</summary><p class="fineprint">Version ${escape(details.agreement.version)}</p><p>${escape(details.agreement.text)}</p></details><p class="fineprint">Required to sign in. Optional data choices stay separate.</p>` : ""}
     ${details.termsUri ? `<p class="fineprint"><a href="${escape(details.termsUri)}" target="_blank" rel="noopener noreferrer">Service agreement</a>${details.privacyUri ? ` \xB7 <a href="${escape(details.privacyUri)}" target="_blank" rel="noopener noreferrer">Privacy notice</a>` : ""}</p>` : ""}
     <button class="primary" type="submit" name="action" value="continue">Allow and continue</button>
     <button class="quiet" type="submit" id="not-me" name="action" value="switch" formnovalidate>Not you? Sign in with another account</button>
@@ -11205,14 +11242,7 @@
   <div class="signin-form"><div>${body}</div>
   <div class="signin-trust"><p class="signin-trust-head"><img class="signin-logo" src="./fidj-logo.png" alt="Fidj"><strong>What Fidj is</strong></p><p>Fidj holds your account so each app does not have to. You can see every app you use, what it holds, and take it back \u2014 at any time.</p></div></div>
   ${badgeStrip(app_config_default.badges)}</section>`;
-    element("reveal")?.addEventListener("click", () => {
-      const field = element("password");
-      const button2 = element("reveal");
-      if (!field || !button2) return;
-      const hidden = field.type === "password";
-      field.type = hidden ? "text" : "password";
-      button2.textContent = hidden ? "Hide" : "Show";
-    });
+    if (element("interaction")) bindPasswordReveal(element("interaction"));
     element("not-me")?.addEventListener("click", () => {
       forgetSignIn(app_config_default.appId);
       try {
@@ -11234,6 +11264,7 @@
   <div class="signin-identity"><h1>Your account.<br>Your control.</h1><p class="signin-description">Secure access to the apps you use, with one Fidj identity.</p></div>
   </div>
   <div class="signin-form"><div>${banner()}${accountForm(route, { linkToken, verificationConfirmed, emailVerified, accountEmail })}</div><footer class="signin-badges"><a href="#/signin">Back to sign in</a></footer></div></section>`;
+    bindPasswordReveal(root);
     wireAccount(route);
   }
   function wireAccount(route) {
