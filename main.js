@@ -7590,7 +7590,7 @@
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.bpInfo = void 0;
-      exports.bpInfo = { version: "v3.13.0" };
+      exports.bpInfo = { version: "v3.14.0" };
     }
   });
 
@@ -9898,7 +9898,7 @@
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.bpInfo = void 0;
-      exports.bpInfo = { version: "v3.13.0" };
+      exports.bpInfo = { version: "v3.14.0" };
     }
   });
 
@@ -10131,8 +10131,8 @@
       };
     return {
       ...empty,
-      heading: "My Fidj account",
-      intro: "Your identity is shared across your apps. Privacy choices remain separate for each app.",
+      heading: "Profile",
+      intro: "",
       status: state.emailVerified ? "Your email address is verified." : "Your email is not verified yet.",
       alternative: { text: "", href: "#/forgot", label: "Reset my password" },
       extras: [
@@ -10255,7 +10255,7 @@
       };
     });
   }
-  function accountForm(route, state) {
+  function accountForm(route, state, options = {}) {
     const model = accountModel(route, state);
     const fields = model.fields.map((field) => {
       const input = `<input id="${escape(field.id)}" type="${escape(field.type)}"${attribute("autocomplete", field.autocomplete)}${attribute("minlength", field.minlength)}${field.required ? " required" : ""}>`;
@@ -10265,7 +10265,7 @@
     const alternative = model.alternative ? `${model.alternative.text ? `<p>${escape(model.alternative.text)}</p>` : ""}${model.alternative.href ? `<a href="${escape(model.alternative.href)}">${escape(model.alternative.label)}</a>` : ""}` : "";
     if (route === "forgot" || route === "reset" || route === "verify")
       return `<h2>${escape(model.heading)}</h2><p>${escape(model.intro)}</p>${form}${alternative}`;
-    return `<h2>${escape(model.heading)}</h2><p class="account-identity">Signed in as <strong>${escape(state.accountEmail)}</strong></p><p>${escape(model.intro)}</p><p id="verification-status">${escape(model.status)}</p>` + model.extras.map((control) => `<button id="${escape(control.id)}">${escape(control.label)}</button>`).join("") + `<p><a href="${escape(model.alternative.href)}">${escape(model.alternative.label)}</a></p>`;
+    return (options.compact ? "" : `<h2>${escape(model.heading)}</h2><p class="account-identity">Signed in as <strong>${escape(state.accountEmail)}</strong></p>`) + (model.intro ? `<p>${escape(model.intro)}</p>` : "") + `<p id="verification-status">${escape(model.status)}</p>` + model.extras.map((control) => `<button id="${escape(control.id)}">${escape(control.label)}</button>`).join("") + `<p><a href="${escape(model.alternative.href)}">${escape(model.alternative.label)}</a></p>`;
   }
   function returnNotice(asking) {
     return `<p class="signin-return" role="note">${escape(returnNoticeModel(asking))}</p>`;
@@ -10290,10 +10290,7 @@
   }
   function agreementScreen(title, agreement, href) {
     const model = agreementModel(title, agreement);
-    return `<h2>${escape(model.heading)}</h2>
-  <p class="signin-lead">${escape(model.lead)}</p>
-  <div class="agreement-text" tabindex="0">${escape(model.text)}</div>
-  <label class="agreement-choice"><input id="service-agreement" type="checkbox" required aria-required="true" data-version="${escape(model.version)}"><span>I accept the <a class="agreement-document" href="${escape(href)}" target="fidj-agreement" rel="noopener">service agreement \xB7 ${escape(model.versionLabel)} \u2197</a></span></label>
+    return `<label class="agreement-choice"><input id="service-agreement" type="checkbox" required aria-required="true" data-version="${escape(model.version)}"><span>I accept the <a class="agreement-document" href="${escape(href)}" target="fidj-agreement" rel="noopener">service agreement \xB7 ${escape(model.versionLabel)} \u2197</a></span></label>
   <button class="primary" type="submit"${model.submitDisabled ? " disabled" : ""}>${escape(model.submitLabel)}</button>`;
   }
   function verificationWait(state) {
@@ -10497,7 +10494,7 @@
     apiEndpoint: "https://api.fidj.ovh/v3",
     dashboardUrl: "https://fidj.ovh",
     title: "Mat Cloud App",
-    releaseVersion: "3.13.0",
+    releaseVersion: "3.14.0",
     localDemo: false,
     allowAnonymous: false,
     signin: "both",
@@ -10539,7 +10536,7 @@
   var verificationNotice = "";
   var accountEmail = "";
   var emailEntryOpen = false;
-  var accountRoutes = ["forgot", "reset", "verify", "account"];
+  var accountRoutes = ["forgot", "reset", "verify", "profile"];
   var linkToken = "";
   var verificationConfirmed = false;
   function currentRoute() {
@@ -10561,13 +10558,18 @@
     return `<p role="${role}" class="${kind}">${escape(message)}${finish}</p>`;
   }
   function appNav(current) {
-    const tab = (id, label, selected) => `<button id="${id}"${selected ? ' class="selected" aria-current="page"' : ""}>${label}</button>`;
+    const tab = (id, label, selected) => `<button id="${id}"${selected ? ' class="selected" aria-current="page"' : ""}><span class="tab-label">${label}</span></button>`;
     const account = signedIn ? tab(
       "account-tab",
-      accountEmail ? `Account (${escape(accountEmail)})` : "Account",
+      accountEmail ? `Profile (${escape(accountEmail)})` : "Profile",
       current === "account"
     ) : tab("account-tab", "Sign in", false);
     return tab("content-tab", "Content", current === "content") + account;
+  }
+  function profileSummary() {
+    const publicUrl = `${app_config_default.dashboardUrl}/#/pub/${encodeURIComponent(app_config_default.appId)}`;
+    const badgeUrl = `${app_config_default.apiEndpoint}/apps/${encodeURIComponent(app_config_default.appId)}/badge`;
+    return `<header class="profile-summary"><div class="profile-summary-copy"><span class="eyebrow">Profile</span><strong>${escape(accountEmail)}</strong><span>${escape(app_config_default.title)}</span></div><a class="profile-public" href="${escape(publicUrl)}" target="_blank" rel="noopener"><img src="${escape(badgeUrl)}" alt="${escape(app_config_default.title)} public badge" width="133" height="20"></a><button id="exit" class="danger">Sign out</button></header>`;
   }
   function renderNav(current) {
     const nav = element("app-nav");
@@ -10580,7 +10582,7 @@
     element("content-tab")?.addEventListener("click", () => navigate("content"));
     element("account-tab")?.addEventListener(
       "click",
-      () => navigate(signedIn ? "account" : "signin")
+      () => navigate(signedIn ? "profile" : "signin")
     );
   }
   function wireSignOut() {
@@ -10847,9 +10849,9 @@
       route = "signin";
     else if (!["signin", "content", "privacy", ...accountRoutes].includes(route))
       route = "content";
-    if (route === "privacy") route = signedIn ? "account" : "signin";
+    if (route === "privacy") route = signedIn ? "profile" : "signin";
     window.history.replaceState(null, "", "#/" + route);
-    const standaloneAccount = accountRoutes.includes(route) && !(route === "account" && signedIn);
+    const standaloneAccount = accountRoutes.includes(route) && !(route === "profile" && signedIn);
     document.body.classList.toggle(
       "signin-view",
       route === "signin" || standaloneAccount
@@ -10863,8 +10865,8 @@
       renderAccount(route);
       return;
     }
-    if (route === "account") {
-      root.innerHTML = `<section class="card content-account">${banner()}${accountForm("account", { linkToken, verificationConfirmed, emailVerified, accountEmail })}${privacyBlock()}<div class="account-actions"><button id="continue-app" class="primary">Continue to ${escape(app_config_default.title)}</button><button id="exit">Sign out</button></div></section>`;
+    if (route === "profile") {
+      root.innerHTML = `<section class="content-account">${profileSummary()}<div class="card profile-body">${banner()}${accountForm("account", { linkToken, verificationConfirmed, emailVerified, accountEmail }, { compact: true })}${privacyBlock()}</div></section>`;
       renderNav("account");
       wireAccount("account");
       wireSignOut();

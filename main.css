@@ -403,7 +403,7 @@ main {
   width: 22px;
   height: 22px;
 }
-label {
+body:not(.has-module) label {
   display: block;
   font-family: var(--fidj-font-mono);
   font-size: 11px;
@@ -997,6 +997,48 @@ body.has-module {
   max-width: 680px;
   margin: 2rem auto;
 }
+.profile-summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--fidj-line-soft);
+  border-radius: var(--fidj-radius);
+  background: var(--fidj-surface);
+}
+.profile-summary-copy {
+  display: grid;
+  min-width: 0;
+  margin-right: auto;
+  gap: 2px;
+}
+.profile-summary-copy strong,
+.profile-summary-copy span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.profile-summary-copy > span:last-child {
+  color: var(--fidj-text-faint);
+  font-size: 13px;
+}
+.profile-public {
+  display: flex;
+  flex: 0 0 auto;
+  margin: 0;
+}
+.profile-public img {
+  display: block;
+}
+.profile-summary .danger {
+  flex: 0 0 auto;
+  color: var(--fidj-danger);
+  border-color: var(--fidj-danger);
+}
+.profile-body {
+  margin: 0;
+}
 .content-account button {
   margin: 0.4rem 0.4rem 0.4rem 0;
 }
@@ -1004,6 +1046,8 @@ body.has-module {
   width: 100%;
 }
 .topbar .content-nav {
+  align-self: stretch;
+  align-items: stretch;
   border: 0;
   border-left: 1px solid var(--fidj-ink-line-soft);
   border-radius: 0;
@@ -1013,6 +1057,9 @@ body.has-module {
   flex-wrap: nowrap;
 }
 .topbar .content-nav button {
+  display: flex;
+  align-items: center;
+  height: 100%;
   padding: 8px 12px;
   font-size: 13.5px;
   color: var(--fidj-on-ink-faint);
@@ -1050,8 +1097,49 @@ body.has-module {
 }
 .topbar .content-nav #account-tab {
   overflow: hidden;
-  text-overflow: ellipsis;
   min-width: 0;
+}
+.topbar .content-nav .tab-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (max-width: 760px) {
+  .topbar {
+    gap: 7px;
+    padding-inline: 10px;
+  }
+  .topbar .brand-name {
+    display: none;
+  }
+  .topbar .content-nav {
+    min-width: 0;
+    padding-left: 0;
+    gap: 0;
+    border-left: 0;
+  }
+  .topbar .content-nav::before {
+    content: "";
+    align-self: center;
+    height: 24px;
+    margin-right: 8px;
+    border-left: 1px solid var(--fidj-ink-line-soft);
+  }
+  .topbar .content-nav button {
+    min-width: 0;
+    padding-inline: 6px;
+    font-size: 12px;
+  }
+  .topbar .content-nav #account-tab {
+    max-width: 15ch;
+  }
+  .profile-summary {
+    flex-wrap: wrap;
+  }
+  .profile-summary-copy {
+    flex-basis: calc(100% - 7rem);
+  }
 }
 .signin-logo {
   width: 22px;
