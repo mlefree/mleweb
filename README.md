@@ -28,7 +28,7 @@ npm start
 
 Open http://localhost:8201. The generator command sets `--anonymous false`: sign in on the initial screen to enter Content. Sign in, inspect current roles, toggle a preference, export app-scoped data or confirm departure. The About me link opens the original CV page; no CV copy is maintained here.
 
-Start the local Fidj API/console with `python3 scripts/local-stack.py start` from the Ofidj workspace. Local builds select `fidj-local-mleweb`, API port 3201 and console port 4200. Alex (`alex@fidj.local` / `local-demo-only`) owns the app; Maya (`maya@fidj.local` / `local-member-only`) is a member. Use the console to change roles, then refresh access here. Studio Notes at port 8200 separately demonstrates role-protected backend actions.
+Start the local Fidj API/console with `python3 scripts/local-stack.py start` from `fidj-brain` in the Ofidj workspace. Local builds select `fidj-local-mleweb`, API port 3201 and console port 4200. Alex (`alex@fidj.local` / `local-demo-only`) owns the app; Maya (`maya@fidj.local` / `local-member-only`) is a member. Use the console to change roles, then refresh access here. Studio Notes at port 8200 separately demonstrates role-protected backend actions.
 
 ## GitHub CI and acceptance
 
