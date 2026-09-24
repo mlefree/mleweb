@@ -10449,21 +10449,32 @@
     if (open && focus)
       document.getElementById("email")?.focus();
   }
-  function showVersionBadge(version, apiEndpoint) {
-    if (!/^\d+\.\d+\.\d+(-[\w.]+)?$/.test(version || ""))
+  function showVersionBadge(version, apiEndpoint, module) {
+    const readable = (value) => /^\d+\.\d+\.\d+(-[\w.]+)?$/.test(value || "");
+    if (!readable(version))
       return;
+    const parts = [`fidj@${version}`];
+    const labels = [`Fidj version ${version}`];
+    if (module && readable(module.version)) {
+      parts.push(`${module.name} ${module.version}`);
+      labels.push(`${module.name} version ${module.version}`);
+    }
     const badge = document.createElement("div");
     badge.className = "fidj-version";
-    badge.setAttribute("aria-label", `Fidj version ${version}`);
-    badge.textContent = `fidj@${version}`;
+    const show = () => {
+      badge.textContent = parts.join(" \xB7 ");
+      badge.setAttribute("aria-label", labels.join(", "));
+    };
+    show();
     document.body.append(badge);
     if (apiEndpoint) {
       void fetch(`${apiEndpoint.replace(/\/$/, "")}/status`).then((response) => response.ok ? response.json() : null).then((status) => {
         const apiVersion = status?.version || status?.built;
         if (!apiVersion)
           return;
-        badge.textContent = `fidj@${version} \xB7 API ${apiVersion}`;
-        badge.setAttribute("aria-label", `Fidj version ${version}, API version ${apiVersion}`);
+        parts.push(`API ${apiVersion}`);
+        labels.push(`API version ${apiVersion}`);
+        show();
       }).catch(() => void 0);
     }
   }
@@ -10638,6 +10649,8 @@
     logo: "./brand/logo.gif",
     favicon: "./brand/favicon.gif",
     moduleEntry: "",
+    moduleVersion: "",
+    moduleLabel: "module",
     moduleMount: null,
     domain: "mlefree.com"
   };
@@ -10646,7 +10659,11 @@
   var sdk = new import_node.FidjNodeService();
   var oidc = app_config_default.oidcIssuer ? new import_node.FidjOidcClient({ issuer: app_config_default.oidcIssuer, clientId: app_config_default.appId, redirectUri: window.location.origin + window.location.pathname, apiEndpoint: app_config_default.apiEndpoint, storage: sessionStorage }) : null;
   var root = document.querySelector("#app");
-  showVersionBadge(app_config_default.releaseVersion, app_config_default.title === "Fidj" ? app_config_default.apiEndpoint : void 0);
+  showVersionBadge(
+    app_config_default.releaseVersion,
+    app_config_default.title === "Fidj" ? app_config_default.apiEndpoint : void 0,
+    app_config_default.moduleVersion ? { name: app_config_default.moduleLabel || "module", version: app_config_default.moduleVersion } : void 0
+  );
   var appPath = `/me/apps/${encodeURIComponent(app_config_default.appId)}`;
   var passkeyHere = app_config_default.title === "Fidj" && passkeySupported();
   var signedInWithPasskey = false;
