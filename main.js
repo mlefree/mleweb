@@ -7590,7 +7590,7 @@
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.bpInfo = void 0;
-      exports.bpInfo = { version: "v3.14.0" };
+      exports.bpInfo = { version: "v3.15.0" };
     }
   });
 
@@ -8418,6 +8418,46 @@
             yield this.sendOnEndpoint({ verb: "POST", key: "me", relativePath: "resend-verification" });
           });
         }
+        // Passkeys (v3 P1-4). The browser runs the WebAuthn ceremony with these
+        // options; the SDK only carries the HTTP side, so it stays usable in Node.
+        passkeyLoginOptions() {
+          return __awaiter(this, void 0, void 0, function* () {
+            const endpoints = yield this.connection.getApiEndpoints({ filter: "theBestOne" });
+            if (!endpoints || endpoints.length !== 1) {
+              throw new FidjError_1.FidjError(400, "No configured account API endpoint.");
+            }
+            const answer = yield new connection_1.Ajax().post({
+              url: endpoints[0].url.replace(/\/$/, "") + "/passkeys/options",
+              headers: { "Content-Type": "application/json", Accept: "application/json" },
+              data: {},
+              timeout: _FidjNodeService.DEFAULT_TIMEOUT_MS
+            });
+            return answer.data;
+          });
+        }
+        // Signs in with the browser's answer to passkeyLoginOptions(), the way
+        // login() does with a password: same session, same agreement rule.
+        loginWithPasskey(ticket, response, options) {
+          return __awaiter(this, void 0, void 0, function* () {
+            if (!this.connection.isReady()) {
+              throw new FidjError_1.FidjError(404, "Need an initialized FidjService");
+            }
+            this.forgetProviderSession();
+            yield this._removeAll();
+            yield this._createSession(this.connection.fidjId);
+            yield this.connection.logout();
+            const clientTokens = yield this.connection.getClient().loginWithPasskey(ticket, response, options);
+            yield this.connection.setConnection(clientTokens);
+            if (this.sdk.useDB) {
+              try {
+                yield this.session.sync(this.connection.getClientId());
+              } catch (e) {
+                this.logger.warn("fidj.sdk.service.loginWithPasskey: sync issue", e.toString());
+              }
+            }
+            return this.connection.getUser();
+          });
+        }
         accountPost(path, data) {
           return __awaiter(this, void 0, void 0, function* () {
             const endpoints = yield this.connection.getApiEndpoints({ filter: "theBestOne" });
@@ -8689,6 +8729,88 @@
             return false;
           });
         }
+        // The three tokens a credential sign-in yields. The first is minted with the
+        // credential itself — a password or a passkey grant — and the other two
+        // with that first token, so the agreement rule applies once, to the
+        // person who is present.
+        mintTokens(login, authorization, options) {
+          return __awaiter(this, void 0, void 0, function* () {
+            this.setClientId(login);
+            const urlToken = this.URI + "/apps/" + this.appId + "/tokens";
+            const dataToken = {
+              grant_type: "access_token",
+              termsAccepted: options === null || options === void 0 ? void 0 : options.termsAccepted,
+              termsVersion: options === null || options === void 0 ? void 0 : options.termsVersion,
+              // grant_type: 'client_credentials',
+              // client_id: this.clientId,
+              // client_secret: password,
+              client_udid: this.clientUuid,
+              client_info: this.clientInfo,
+              // audience: this.appId,
+              scope: JSON.stringify(this.sdk)
+            };
+            const headers = {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+              Authorization: authorization
+            };
+            const createdAccessToken = (yield new Ajax_1.Ajax().post({
+              url: urlToken,
+              data: dataToken,
+              headers,
+              timeout: sdk_1.FidjNodeService.DEFAULT_TIMEOUT_MS
+            })).data.token;
+            dataToken.grant_type = "id_token";
+            const createdIdToken = (yield new Ajax_1.Ajax().post({
+              url: urlToken,
+              data: dataToken,
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+                Authorization: "Bearer " + createdAccessToken.data
+              },
+              timeout: sdk_1.FidjNodeService.DEFAULT_TIMEOUT_MS
+            })).data.token;
+            dataToken.grant_type = "refresh_token";
+            const createdRefreshToken = (yield new Ajax_1.Ajax().post({
+              url: urlToken,
+              data: dataToken,
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+                Authorization: "Bearer " + createdAccessToken.data
+              },
+              timeout: sdk_1.FidjNodeService.DEFAULT_TIMEOUT_MS
+            })).data.token;
+            return new ClientTokens_1.ClientTokens(login, createdAccessToken, createdIdToken, createdRefreshToken);
+          });
+        }
+        // A passkey sign-in (v3 P1-4). The browser ran the ceremony against the
+        // options and ticket from POST /passkeys/options; the API checks the answer
+        // and hands back a short grant that stands in for the password.
+        loginWithPasskey(ticket, response, options) {
+          return __awaiter(this, void 0, void 0, function* () {
+            if (!this.URI) {
+              throw new sdk_1.FidjError(408, "no-api-uri");
+            }
+            try {
+              const signedIn2 = (yield new Ajax_1.Ajax().post({
+                url: this.URI + "/passkeys/login",
+                data: { ticket, response },
+                headers: { "Content-Type": "application/json", Accept: "application/json" },
+                timeout: sdk_1.FidjNodeService.DEFAULT_TIMEOUT_MS
+              })).data;
+              return yield this.mintTokens(signedIn2.username, "Passkey " + signedIn2.grant, options);
+            } catch (e) {
+              if (e instanceof sdk_1.FidjError) {
+                throw e;
+              }
+              const code = typeof (e === null || e === void 0 ? void 0 : e.code) === "number" ? e.code : 500;
+              const body = e === null || e === void 0 ? void 0 : e.message;
+              throw new sdk_1.FidjError(code, typeof (body === null || body === void 0 ? void 0 : body.message) === "string" && body.message || "passkey-login-failed", body && typeof body === "object" ? body : void 0);
+            }
+          });
+        }
         login(login, password, updateProperties, options) {
           return __awaiter(this, void 0, void 0, function* () {
             var _a, _b;
@@ -8717,54 +8839,7 @@
                 throw new sdk_1.FidjError(403, "verification-required", { email: login });
               }
               const createdUser = account.data.user;
-              this.setClientId(login);
-              const urlToken = this.URI + "/apps/" + this.appId + "/tokens";
-              const dataToken = {
-                grant_type: "access_token",
-                termsAccepted: options === null || options === void 0 ? void 0 : options.termsAccepted,
-                termsVersion: options === null || options === void 0 ? void 0 : options.termsVersion,
-                // grant_type: 'client_credentials',
-                // client_id: this.clientId,
-                // client_secret: password,
-                client_udid: this.clientUuid,
-                client_info: this.clientInfo,
-                // audience: this.appId,
-                scope: JSON.stringify(this.sdk)
-              };
-              const headers = {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-                Authorization: "Basic " + tools.Base64.encode("" + login + ":" + password)
-              };
-              const createdAccessToken = (yield new Ajax_1.Ajax().post({
-                url: urlToken,
-                data: dataToken,
-                headers,
-                timeout: sdk_1.FidjNodeService.DEFAULT_TIMEOUT_MS
-              })).data.token;
-              dataToken.grant_type = "id_token";
-              const createdIdToken = (yield new Ajax_1.Ajax().post({
-                url: urlToken,
-                data: dataToken,
-                headers: {
-                  "Content-Type": "application/json",
-                  Accept: "application/json",
-                  Authorization: "Bearer " + createdAccessToken.data
-                },
-                timeout: sdk_1.FidjNodeService.DEFAULT_TIMEOUT_MS
-              })).data.token;
-              dataToken.grant_type = "refresh_token";
-              const createdRefreshToken = (yield new Ajax_1.Ajax().post({
-                url: urlToken,
-                data: dataToken,
-                headers: {
-                  "Content-Type": "application/json",
-                  Accept: "application/json",
-                  Authorization: "Bearer " + createdAccessToken.data
-                },
-                timeout: sdk_1.FidjNodeService.DEFAULT_TIMEOUT_MS
-              })).data.token;
-              return new ClientTokens_1.ClientTokens(login, createdAccessToken, createdIdToken, createdRefreshToken);
+              return yield this.mintTokens(login, "Basic " + tools.Base64.encode("" + login + ":" + password), options);
             } catch (e) {
               this.logger.warn("Login impossible", e);
               if (e instanceof sdk_1.FidjError) {
@@ -9836,6 +9911,14 @@
     }
   });
 
+  // ../../../contracts/dist/fidj-api/FidjApiPasskeys.js
+  var require_FidjApiPasskeys = __commonJS({
+    "../../../contracts/dist/fidj-api/FidjApiPasskeys.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", { value: true });
+    }
+  });
+
   // ../../../contracts/dist/fidj-api/index.js
   var require_fidj_api = __commonJS({
     "../../../contracts/dist/fidj-api/index.js"(exports) {
@@ -9889,6 +9972,7 @@
       __exportStar(require_FidjApiPurposes(), exports);
       __exportStar(require_identity(), exports);
       __exportStar(require_FidjApiAccountSelfService(), exports);
+      __exportStar(require_FidjApiPasskeys(), exports);
     }
   });
 
@@ -9898,7 +9982,7 @@
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.bpInfo = void 0;
-      exports.bpInfo = { version: "v3.14.0" };
+      exports.bpInfo = { version: "v3.15.0" };
     }
   });
 
@@ -10151,6 +10235,18 @@
       ]
     };
   }
+  var passkeyDoorModel = {
+    id: "entry-passkey",
+    name: "entry",
+    value: "passkey",
+    kind: "primary",
+    label: "Continue with a passkey"
+  };
+  var emailDividerLabel = "or with your email";
+  var walletDoorModel = {
+    label: "EU Digital Identity Wallet / France Identit\xE9",
+    date: "From Dec 2026"
+  };
   function credentialsModel(state) {
     return {
       email: {
@@ -10238,9 +10334,13 @@
       return "";
     return `<footer class="signin-badges">${entries.map((entry) => `<span>${escape(entry)}</span>`).join("")}</footer>`;
   }
-  function credentialFields(state) {
+  function credentialFields(state, options = {}) {
     const model = credentialsModel(state);
-    return `<label for="email">${escape(model.email.label)}</label><input id="email" type="email" value="${escape(model.email.value)}" placeholder="${escape(model.email.placeholder)}" autocomplete="username"><div class="field-head"><label for="password">${escape(model.password.label)}</label><a href="${escape(model.forgot.href)}">${escape(model.forgot.label)}</a></div><div class="password-field"><input id="password" type="password" value="${escape(model.password.value)}" placeholder="${escape(model.password.placeholder)}" autocomplete="current-password"><button type="button" id="reveal" aria-controls="password">${escape(model.reveal.label)}</button></div><button class="primary" type="submit" name="entry" value="credentials">${escape(model.submit.label)}</button><button class="secondary" type="submit" name="signup" value="true">${escape(model.signup.label)}</button>`;
+    const passkey = options.passkey ? `<button class="primary passkey" type="submit" id="${escape(passkeyDoorModel.id)}" name="${escape(passkeyDoorModel.name)}" value="${escape(passkeyDoorModel.value)}" formnovalidate>${escape(passkeyDoorModel.label)}</button><p class="entry-divider"><span>${escape(emailDividerLabel)}</span></p>` : "";
+    return passkey + `<label for="email">${escape(model.email.label)}</label><input id="email" type="email" value="${escape(model.email.value)}" placeholder="${escape(model.email.placeholder)}" autocomplete="username"><div class="field-head"><label for="password">${escape(model.password.label)}</label><a href="${escape(model.forgot.href)}">${escape(model.forgot.label)}</a></div><div class="password-field"><input id="password" type="password" value="${escape(model.password.value)}" placeholder="${escape(model.password.placeholder)}" autocomplete="current-password"><button type="button" id="reveal" aria-controls="password">${escape(model.reveal.label)}</button></div><button class="primary" type="submit" name="entry" value="credentials">${escape(model.submit.label)}</button><button class="secondary" type="submit" name="signup" value="true">${escape(model.signup.label)}</button>`;
+  }
+  function walletDoor() {
+    return `<p class="wallet-door" aria-disabled="true"><span>${escape(walletDoorModel.label)}</span><span class="wallet-date">${escape(walletDoorModel.date)}</span></p>`;
   }
   function bindPasswordReveal(root2) {
     root2.querySelectorAll("button[aria-controls]").forEach((button2) => {
@@ -10366,6 +10466,38 @@
         badge.setAttribute("aria-label", `Fidj version ${version}, API version ${apiVersion}`);
       }).catch(() => void 0);
     }
+  }
+  var fromBase64url = (value) => {
+    const base64 = value.replace(/-/g, "+").replace(/_/g, "/");
+    const binary = atob(base64 + "===".slice((base64.length + 3) % 4));
+    return Uint8Array.from(binary, (c) => c.charCodeAt(0)).buffer;
+  };
+  var toBase64url = (buffer) => btoa(String.fromCharCode(...new Uint8Array(buffer))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  var withIds = (list = []) => list.map((entry) => ({ ...entry, id: fromBase64url(entry.id) }));
+  function passkeySupported() {
+    return typeof window !== "undefined" && Boolean(window.PublicKeyCredential) && typeof navigator !== "undefined" && Boolean(navigator.credentials);
+  }
+  async function passkeyAssertion(options) {
+    const credential = await navigator.credentials.get({
+      publicKey: {
+        ...options,
+        challenge: fromBase64url(options.challenge),
+        allowCredentials: withIds(options.allowCredentials)
+      }
+    });
+    const response = credential.response;
+    return {
+      id: credential.id,
+      rawId: toBase64url(credential.rawId),
+      type: credential.type,
+      response: {
+        clientDataJSON: toBase64url(response.clientDataJSON),
+        authenticatorData: toBase64url(response.authenticatorData),
+        signature: toBase64url(response.signature),
+        userHandle: response.userHandle ? toBase64url(response.userHandle) : void 0
+      },
+      clientExtensionResults: {}
+    };
   }
 
   // ../../../entry/dist/provider-window.js
@@ -10494,7 +10626,7 @@
     apiEndpoint: "https://api.fidj.ovh/v3",
     dashboardUrl: "https://fidj.ovh",
     title: "Mat Cloud App",
-    releaseVersion: "3.14.0",
+    releaseVersion: "3.15.0",
     localDemo: false,
     allowAnonymous: false,
     signin: "both",
@@ -10516,6 +10648,8 @@
   var root = document.querySelector("#app");
   showVersionBadge(app_config_default.releaseVersion, app_config_default.title === "Fidj" ? app_config_default.apiEndpoint : void 0);
   var appPath = `/me/apps/${encodeURIComponent(app_config_default.appId)}`;
+  var passkeyHere = app_config_default.title === "Fidj" && passkeySupported();
+  var signedInWithPasskey = false;
   var signedIn = false;
   var emailVerified = false;
   var anonymous = false;
@@ -10890,8 +11024,8 @@
     root.innerHTML = `<section class="signin-shell"><div class="signin-intro${app_config_default.highlights?.length ? "" : " is-plain"}">${masthead(app_config_default.logo, app_config_default.title)}
   <div class="signin-identity"><h1>${escape(app_config_default.welcome)}</h1><p class="signin-description">${escape(app_config_default.description)}</p></div>
   ${highlightCells(app_config_default.highlights)}</div>
-  <div class="signin-form"><div>${banner()}<h2>Sign in to ${escape(app_config_default.title)}</h2><form id="signin">${credentialFields({ email: signInEmail, password: signInPassword })}</form>${app_config_default.allowAnonymous ? `<div class="signin-divider"><span>or explore first</span></div><button class="anonymous-entry" id="anonymous">Enter anonymously <span aria-hidden="true">\u2192</span></button><p class="signin-footnote">No account needed to view the content.</p>` : ""}
-  <div class="signin-trust"><p class="signin-trust-head"><img class="signin-logo" src="./fidj-logo.png" alt="Fidj"><strong>Your account, with Fidj</strong></p><p>Signing in creates one Fidj account you keep across every app that uses Fidj.</p><p>You choose what this app may store \u2014 and can export or erase it at any moment.</p></div></div>
+  <div class="signin-form"><div>${banner()}<h2>Sign in to ${escape(app_config_default.title)}</h2><form id="signin">${credentialFields({ email: signInEmail, password: signInPassword }, { passkey: passkeyHere })}</form>${app_config_default.allowAnonymous ? `<div class="signin-divider"><span>or explore first</span></div><button class="anonymous-entry" id="anonymous">Enter anonymously <span aria-hidden="true">\u2192</span></button><p class="signin-footnote">No account needed to view the content.</p>` : ""}
+  ${app_config_default.title === "Fidj" ? walletDoor() : `<div class="signin-trust"><p class="signin-trust-head"><img class="signin-logo" src="./fidj-logo.png" alt="Fidj"><strong>Your account, with Fidj</strong></p><p>Signing in creates one Fidj account you keep across every app that uses Fidj.</p><p>You choose what this app may store \u2014 and can export or erase it at any moment.</p></div>`}</div>
   ${badgeStrip(app_config_default.badges)}</div></section>`;
     wireNav();
     element("anonymous")?.addEventListener("click", () => {
@@ -10904,7 +11038,7 @@
       element("signin").innerHTML = providerEntry(
         app_config_default.title,
         app_config_default.appId,
-        app_config_default.signin === "button" ? "" : credentialFields({ email: signInEmail, password: signInPassword }),
+        app_config_default.signin === "button" ? "" : credentialFields({ email: signInEmail, password: signInPassword }, { passkey: passkeyHere }),
         isFidjItself,
         app_config_default.signin
       );
@@ -10960,8 +11094,16 @@
         if (!acceptance2) return;
         submitter?.setAttribute("data-busy", "true");
         void action(async () => {
-          if (await refusedBeforeSignIn(signInEmail, signInPassword, false, acceptance2))
-            return;
+          const refused = signedInWithPasskey ? await refusedBeforePasskey(acceptance2) : await refusedBeforeSignIn(signInEmail, signInPassword, false, acceptance2);
+          if (refused) return;
+          await completeSignIn();
+        });
+        return;
+      }
+      if (submitter?.name === "entry" && submitter.value === "passkey") {
+        submitter.setAttribute("data-busy", "true");
+        void action(async () => {
+          if (await refusedBeforePasskey()) return;
           await completeSignIn();
         });
         return;
@@ -10990,6 +11132,7 @@
     });
   }
   async function refusedBeforeSignIn(email, password, signup, acceptance2) {
+    signedInWithPasskey = false;
     try {
       await sdk.login(email, password, { autoSignup: signup, ...acceptance2 });
       pendingAgreement = null;
@@ -11009,6 +11152,29 @@
           throw new Error("We cannot reach Fidj right now. Please try again.");
         }
         return true;
+      }
+      throw new Error(signInErrorMessage(error));
+    }
+  }
+  async function refusedBeforePasskey(acceptance2) {
+    signedInWithPasskey = true;
+    try {
+      const { options, ticket } = await sdk.passkeyLoginOptions();
+      const response = await passkeyAssertion(options);
+      await sdk.loginWithPasskey(ticket, response, acceptance2);
+      pendingAgreement = null;
+      awaitingVerification = "";
+      return false;
+    } catch (error) {
+      if (agreementRequired(error)) {
+        pendingAgreement = agreementFromRefusal(error) || await readAgreement();
+        if (!pendingAgreement) {
+          throw new Error("We cannot reach Fidj right now. Please try again.");
+        }
+        return true;
+      }
+      if (error?.name === "NotAllowedError") {
+        throw new Error("No passkey was used. Try again, or sign in with your email.");
       }
       throw new Error(signInErrorMessage(error));
     }
