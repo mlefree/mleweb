@@ -7590,7 +7590,7 @@
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.bpInfo = void 0;
-      exports.bpInfo = { version: "v3.15.0" };
+      exports.bpInfo = { version: "v3.16.0" };
     }
   });
 
@@ -9982,7 +9982,7 @@
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.bpInfo = void 0;
-      exports.bpInfo = { version: "v3.15.0" };
+      exports.bpInfo = { version: "v3.16.0" };
     }
   });
 
@@ -10310,6 +10310,40 @@
     }
   }
 
+  // ../../../entry/dist/server.js
+  var oidcInteractionStyles = `.oidc-page,.oidc-page *{box-sizing:border-box}.oidc-page{width:min(100%,720px);max-width:none;padding:0;font:16px system-ui;color:#153e37;text-align:left;min-height:calc(100vh - 48px);margin:0 auto;overflow:hidden;border:1px solid #b9ccc0;border-radius:20px;background:white}.oidc-page .oidc-brand{display:flex;align-items:center;gap:16px;padding:18px 28px;background:#173e36;color:white}.oidc-page .oidc-brand img{width:48px;height:48px}.oidc-page .oidc-brand p{margin:0;font-size:21px;font-weight:700;line-height:1.08}.oidc-page section{padding:32px 36px 40px}.oidc-page section>h1{margin:0 0 10px;font-size:30px;line-height:1.15}.oidc-page section>p{line-height:1.45}.oidc-page form{margin-top:24px}.oidc-page label{display:block;margin:20px 0 8px}.oidc-page input,.oidc-page button{width:100%;padding:14px;border:1px solid #b9ccc0;border-radius:10px;font:inherit}.oidc-page button{margin-top:14px;background:#173e36;color:white;cursor:pointer;font-weight:600}.oidc-page .secondary{background:white;color:#173e36}.oidc-page .cancel{border-color:transparent;background:transparent}.oidc-page .notice{margin:0 0 4px;padding:12px 14px;border:1px solid #ef4b42;background:#fdecea;color:#8a1c16;border-radius:8px}.oidc-page .return{margin:0;font-size:14px;color:#3f5c52}.oidc-page .field-head,.oidc-page .password-field{display:flex;align-items:flex-end;gap:12px}.oidc-page .field-head{justify-content:space-between}.oidc-page .field-head label{margin-bottom:0}.oidc-page .field-link{font-size:14px;color:#3f5c52}.oidc-page .password-field input{flex:1}.oidc-page .password-field button{width:auto;margin-top:0}.oidc-page .account-picker{display:grid;grid-template-columns:44px minmax(0,1fr) 24px;align-items:center;gap:12px;padding:12px 14px;border:1px solid #b9ccc0;border-radius:12px;background:#f3f6f1}.oidc-page .account-avatar{display:grid;width:44px;height:44px;place-items:center;border-radius:50%;background:#173e36;color:white;font-size:18px;font-weight:700}.oidc-page .account-copy{display:flex;min-width:0;flex-direction:column;gap:2px}.oidc-page .account-copy small{font-size:12px;color:#3f5c52}.oidc-page .account-email{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.oidc-page .account-check{font-size:20px;font-weight:700}.oidc-page .permission-title{margin:22px 0 8px;font-weight:600}.oidc-page .permission-list{margin:0;padding:12px 14px 12px 36px;border:1px solid #b9ccc0;border-radius:12px}.oidc-page .permission-list li{padding:3px 0}.oidc-page .account-switch{text-align:left}.oidc-page .agreement-choice{display:flex;align-items:flex-start;gap:10px;margin:20px 0 8px}.oidc-page .agreement-choice input{width:auto}.oidc-page .fineprint{margin:6px 0;font-size:14px;color:#3f5c52}.oidc-page .agreement-link{display:inline-block;margin:2px 0 8px;color:#173e36;font-weight:600}@media(max-width:700px){.oidc-page{min-height:100vh;border:0;border-radius:0}.oidc-page .oidc-brand{padding:16px 24px}.oidc-page .oidc-brand img{width:44px;height:44px}.oidc-page .oidc-brand p{font-size:19px}.oidc-page section{padding:26px 24px 34px}.oidc-page section>h1{font-size:26px}}.oidc-page .divider{display:flex;align-items:center;gap:12px;margin:22px 0 0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#3f5c52}.oidc-page .divider::before,.oidc-page .divider::after{content:"";flex:1;height:1px;background:#b9ccc0}.oidc-page button:disabled{border-color:#d4d9d5;background:#d4d9d5;color:#778079;cursor:not-allowed}.oidc-page .agreement-choice a{color:#173e36;font-weight:600}.oidc-page.oidc-page :is(h1,p,label,small,strong,a,li,span,input,button){font-family:inherit;letter-spacing:normal;text-transform:none;text-wrap:wrap}.oidc-page.oidc-page{margin:0 auto;max-width:none;padding:0}.oidc-page.oidc-page :is(h1,p,label,li,strong){color:inherit}.oidc-page.oidc-page label{font-size:inherit;margin:20px 0 8px}.oidc-page.oidc-page .agreement-choice{margin:20px 0 8px}.oidc-page.oidc-page h1{font-weight:700;font-size:30px;line-height:1.15;margin:0 0 10px}.oidc-page.oidc-page .fineprint,.oidc-page.oidc-page .return,.oidc-page.oidc-page .field-link{color:#3f5c52}`;
+  var passkeyDoor = (page) => page.passkey ? `<button class="passkey" name="action" value="${escape(passkeyDoorModel.value)}" data-passkey-options="${escape(JSON.stringify(page.passkey.options))}" formnovalidate>${escape(passkeyDoorModel.label)}</button><input type="hidden" name="passkeyTicket" value="${escape(page.passkey.ticket)}"><input type="hidden" name="passkey" value=""><p class="divider"><span>${escape(emailDividerLabel)}</span></p>` : "";
+  var loginFields = (page) => {
+    const model = credentialsModel({ email: page.email || "", password: "" });
+    return `${passkeyDoor(page)}<label for="email">${escape(model.email.label)}</label><input id="email" type="email" name="email" value="${escape(model.email.value)}" autocomplete="username" required><div class="field-head"><label for="password">${escape(model.password.label)}</label>${page.forgotHref ? `<a class="field-link" href="${escape(page.forgotHref)}">${escape(model.forgot.label)}</a>` : ""}</div><div class="password-field"><input id="password" type="password" name="password" autocomplete="current-password" required><button type="button" aria-controls="password">${escape(model.reveal.label)}</button></div><button name="action" value="continue">Sign in</button><button class="secondary" name="action" value="signup">Create a Fidj account</button>${page.googleEnabled ? '<button class="secondary" name="action" value="google" formnovalidate>Continue with linked Google account</button>' : ""}<button class="secondary" name="action" value="cancel" formnovalidate>Cancel</button>`;
+  };
+  var waitFields = (page) => {
+    const state = page.notYet ? "The link has not been opened yet. Open it, then press Continue again." : page.resent ? "The link was sent again. Only the newest one works." : "";
+    return `<p class="fineprint">The link may take a minute, and it sometimes lands in spam. Open it, then come back here.</p>${state ? `<p class="fineprint">${state}</p>` : ""}<button name="action" value="continue">Continue</button><button class="secondary" name="action" value="resend">Send the link again</button><button class="secondary" name="action" value="cancel" formnovalidate>Cancel</button>`;
+  };
+  var consentFields = (page) => {
+    const agreement = agreementModel(page.appTitle, page.agreement || {});
+    const initial = (page.recognisedEmail || "?").trim().charAt(0).toUpperCase();
+    const identity = page.recognisedEmail ? `<div class="account-picker"><span class="account-avatar" aria-hidden="true">${escape(initial)}</span><span class="account-copy"><small>Signed in with Fidj</small><strong class="account-email">${escape(page.recognisedEmail)}</strong></span><span class="account-check" aria-hidden="true">\u2713</span></div>` : "";
+    const agreementChoice = page.agreement && page.agreementHref ? `<label class="agreement-choice"><input type="checkbox" name="terms" value="true" required> <span>I accept the <a class="agreement-document" href="${escape(page.agreementHref)}" target="_blank" rel="noopener noreferrer">service agreement \xB7 version ${escape(page.agreement.version)} \u2197</a></span></label>` : `<label class="agreement-choice"><input type="checkbox" name="terms" value="true" required> ${escape(agreement.checkboxLabel)}</label>`;
+    return `${identity}<p class="permission-title">${escape(page.appTitle)} will receive:</p><ul class="permission-list">${(page.scopes || []).map((scope) => `<li>${escape(scope)}</li>`).join("")}</ul>${agreementChoice}<button name="action" value="continue" disabled>Allow and continue</button><button class="secondary account-switch" name="action" value="switch" formnovalidate>Use another account</button><button class="cancel" name="action" value="cancel" formnovalidate>Cancel</button>`;
+  };
+  function interactionCopy(page) {
+    const waiting = page.mode === "waiting";
+    const login = page.mode === "login";
+    return {
+      title: waiting ? "Check your email" : login ? "Sign in" : "Authorize",
+      heading: waiting ? "Check your email" : login ? `Sign in to your Fidj account to continue to ${escape(page.appTitle)}.` : `Continue to ${escape(page.appTitle)}`,
+      lead: waiting ? `Your account is created. Waiting for you to open the link sent to <strong>${escape(page.waitingEmail)}</strong>.` : "",
+      fields: waiting ? waitFields(page) : login ? loginFields(page) : consentFields(page)
+    };
+  }
+  function oidcInteractionMarkup(page) {
+    const copy = interactionCopy(page);
+    const waiting = page.mode === "waiting";
+    return `<div class="oidc-page"><header class="oidc-brand"><img src="${escape(page.logoSrc || "/oidc/assets/logo.png")}" alt="Fidj" width="58" height="58"><p>Your identity.<br>Your choices.</p></header><section><h1>${copy.heading}</h1>${copy.lead ? `<p>${copy.lead}</p>` : ""}<p class="return">${escape(returnNoticeModel(page.appTitle))}</p>${waiting || !page.notice ? "" : `<p class="notice" role="alert">${escape(page.notice)}</p>`}<form id="interaction" method="post" action="${escape(page.action)}"><input type="hidden" name="csrf" value="${escape(page.csrf)}">${copy.fields}</form>${page.mode === "login" ? "<p><small>Fidj never shares your password with the app.</small></p>" : ""}</section></div>`;
+  }
+
   // ../../../entry/dist/dom.js
   var escape = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
   var attribute = (name, value) => value === void 0 || value === false || value === "" ? "" : ` ${name}="${escape(value)}"`;
@@ -10367,9 +10401,6 @@
       return `<h2>${escape(model.heading)}</h2><p>${escape(model.intro)}</p>${form}${alternative}`;
     return (options.compact ? "" : `<h2>${escape(model.heading)}</h2><p class="account-identity">Signed in as <strong>${escape(state.accountEmail)}</strong></p>`) + (model.intro ? `<p>${escape(model.intro)}</p>` : "") + `<p id="verification-status">${escape(model.status)}</p>` + model.extras.map((control) => `<button id="${escape(control.id)}">${escape(control.label)}</button>`).join("") + `<p><a href="${escape(model.alternative.href)}">${escape(model.alternative.label)}</a></p>`;
   }
-  function returnNotice(asking) {
-    return `<p class="signin-return" role="note">${escape(returnNoticeModel(asking))}</p>`;
-  }
   function providerEntry(title, appId, credentials, isFidjItself2 = false, shape = "button") {
     const model = providerEntryModel({
       title,
@@ -10390,7 +10421,7 @@
   }
   function agreementScreen(title, agreement, href) {
     const model = agreementModel(title, agreement);
-    return `<label class="agreement-choice"><input id="service-agreement" type="checkbox" required aria-required="true" data-version="${escape(model.version)}"><span>I accept the <a class="agreement-document" href="${escape(href)}" target="fidj-agreement" rel="noopener">service agreement \xB7 ${escape(model.versionLabel)} \u2197</a></span></label>
+    return `<label class="agreement-choice"><input id="service-agreement" type="checkbox" required aria-required="true" data-version="${escape(model.version)}"><span>I accept the <a class="agreement-document" href="${escape(href)}" target="_blank" rel="noopener noreferrer">service agreement \xB7 ${escape(model.versionLabel)} \u2197</a></span></label>
   <button class="primary" type="submit"${model.submitDisabled ? " disabled" : ""}>${escape(model.submitLabel)}</button>`;
   }
   function verificationWait(state) {
@@ -10420,11 +10451,18 @@
       element2.disabled = !checkbox.checked;
     });
     checkbox.addEventListener("change", update);
-    const agreementLink = form.querySelector(".agreement-document");
-    agreementLink?.addEventListener("click", (event) => {
-      event.preventDefault();
-      window.open(agreementLink.href, "fidj-agreement", "popup,width=640,height=720,left=40,top=40,noopener");
-    });
+    update();
+  }
+  function bindOidcInteraction(root2) {
+    bindPasswordReveal(root2);
+    const checkbox = root2.querySelector('input[name="terms"]');
+    const submit = root2.querySelector('button[value="continue"]');
+    if (!checkbox || !submit)
+      return;
+    const update = () => {
+      submit.disabled = !checkbox.checked;
+    };
+    checkbox.addEventListener("change", update);
     update();
   }
   function showEmailEntry(open, focus = false) {
@@ -10637,7 +10675,7 @@
     apiEndpoint: "https://api.fidj.ovh/v3",
     dashboardUrl: "https://fidj.ovh",
     title: "Mat Cloud App",
-    releaseVersion: "3.15.0",
+    releaseVersion: "3.16.0",
     localDemo: false,
     allowAnonymous: false,
     signin: "both",
@@ -11308,9 +11346,9 @@
   <h3>Consent history</h3>${history.length ? history.slice().reverse().map(
       (entry) => `<p>${escape(entry.type)} \xB7 ${entry.granted ? "Accepted" : "Withdrawn"} \xB7 ${escape(entry.changedAt)}</p>`
     ).join("") : "<p>No changes yet.</p>"}
-  <button id="export">Export my app data</button>
+  <button id="export">Export</button>
   <p>This app stores its session in this browser. The export covers Fidj-held records for this membership. There is no separate app database in this static template.</p>
-  ${roles.includes("Owner") ? "<p>Resolve app ownership before leaving.</p>" : leaving ? '<p>Confirm departure: your membership and its Fidj-held data will be removed. Your other apps remain available.</p><button id="confirm-leave" class="danger">Confirm leaving this app</button><button id="cancel-leave">Keep my membership</button>' : '<button id="leave" class="danger">Leave this app</button>'}
+  ${roles.includes("Owner") ? "<p>Resolve app ownership before leaving.</p>" : leaving ? '<p>Confirm departure: your membership and its Fidj-held data will be removed. Your other apps remain available.</p><button id="confirm-leave" class="danger">Leave &amp; erase</button><button id="cancel-leave">Keep my membership</button>' : '<button id="leave" class="danger">Leave &amp; erase</button>'}
   <p class="leaving"><a href="${escape(app_config_default.dashboardUrl)}/#/my" target="_blank" rel="noopener">Open Fidj to manage every app you use \u2197</a><br><small>Fidj is the account provider behind ${escape(app_config_default.title)}. This opens it in a new tab; you stay signed in here.</small></p>`;
   }
   var interactionId = "";
@@ -11367,68 +11405,35 @@
     if (!response.ok) throw new Error("This sign-in has expired. Start again from the app.");
     interaction = await response.json();
   }
-  function interactionWaitNotice() {
-    if (interactionNotYet)
-      return '<p class="fineprint">The link has not been opened yet. Open it, then press Continue again.</p>';
-    if (interactionResent)
-      return '<p class="fineprint">The link was sent again. Only the newest one works.</p>';
-    return "";
-  }
   function interactionScreen() {
     const details = interaction;
-    const asking = escape(details.app.title);
-    const notice = interactionError ? `<p role="alert" class="error">${escape(refusals[interactionError] || refusals.refused)}</p>` : "";
     const action2 = new URL(details.action, app_config_default.apiEndpoint).href;
     let typed = "";
     try {
       typed = sessionStorage.getItem("fidj.interaction.email") || "";
     } catch {
     }
-    const itself = details.app.id === app_config_default.appId;
-    const body = details.awaiting ? `<h2>Check your email</h2>
-  <p class="signin-lead">Your account is created. Waiting for you to open the link sent to <strong>${escape(details.awaiting)}</strong>.</p>
-  ${returnNotice(itself ? "Fidj" : asking)}
-  <form method="post" action="${escape(action2)}" id="interaction">
-    <input type="hidden" name="csrf" value="${escape(details.csrf)}">
-    <p class="fineprint">The link may take a minute, and it sometimes lands in spam. Open it, then come back here.</p>
-    ${interactionWaitNotice()}
-    <button class="primary" type="submit" name="action" value="continue">Continue</button>
-    <button class="secondary" type="submit" name="action" value="resend">Send the link again</button>
-    <button class="quiet" type="submit" name="action" value="cancel" formnovalidate>Cancel and go back</button>
-  </form>` : details.prompt === "login" ? `<h2>${itself ? "Sign in to Fidj" : "Sign in to continue to " + asking}</h2>
-  <p class="signin-lead">${itself ? "One account across every app that uses Fidj, and a separate set of choices for each one." : `This is Fidj, the account behind ${asking}. One account, and separate choices for every app that uses it \u2014 ${asking} never sees your password.`}</p>
-  ${returnNotice(itself ? "Fidj" : asking)}
-  ${notice}
-  <form method="post" action="${escape(action2)}" id="interaction">
-    <input type="hidden" name="csrf" value="${escape(details.csrf)}">
-    <label for="email">Email</label><input id="email" name="email" type="email" value="${escape(typed)}" autocomplete="username" required>
-    <div class="field-head"><label for="password">Password</label><a href="${escape(app_config_default.dashboardUrl)}/#/forgot">Forgot?</a></div>
-    <div class="password-field"><input id="password" name="password" type="password" autocomplete="current-password" required><button type="button" id="reveal" aria-controls="password">Show</button></div>
-    <button class="primary" type="submit" name="action" value="continue">Sign in</button>
-    <button class="secondary" type="submit" name="action" value="signup">Create a Fidj account</button>
-    <button class="quiet" type="submit" name="action" value="cancel" formnovalidate>Cancel and go back</button>
-  </form>` : `<h2>${itself ? "Continue to Fidj" : "Continue to " + asking}</h2>
-  <p class="signin-lead">${itself ? "Fidj is asking for the information below. Optional privacy choices stay separate for every app, including this one." : `${asking} is asking for the information below. Optional privacy choices stay separate, and you can change them in Fidj at any time.`}</p>
-  ${returnNotice(itself ? "Fidj" : asking)}
-  ${notice}
-  <ul class="scope-list">${details.scopes.filter((scope) => scopeMeaning[scope]).map((scope) => `<li>${escape(scopeMeaning[scope])}</li>`).join("")}</ul>
-  <form method="post" action="${escape(action2)}" id="interaction">
-    <input type="hidden" name="csrf" value="${escape(details.csrf)}">
-    <label class="agreement-choice"><input type="checkbox" name="terms" value="true" required><span>${escape(agreementModel(details.app.title, {}).checkboxLabel)}</span></label>
-    ${details.agreement ? `<details class="agreement"><summary>Read service agreement</summary><p class="fineprint">Version ${escape(details.agreement.version)}</p><p>${escape(details.agreement.text)}</p></details><p class="fineprint">Required to sign in. Optional data choices stay separate.</p>` : ""}
-    ${details.termsUri ? `<p class="fineprint"><a href="${escape(details.termsUri)}" target="_blank" rel="noopener noreferrer">Service agreement</a>${details.privacyUri ? ` \xB7 <a href="${escape(details.privacyUri)}" target="_blank" rel="noopener noreferrer">Privacy notice</a>` : ""}</p>` : ""}
-    <button class="primary" type="submit" name="action" value="continue">Allow and continue</button>
-    <button class="quiet" type="submit" id="not-me" name="action" value="switch" formnovalidate>Not you? Sign in with another account</button>
-    <button class="quiet" type="submit" name="action" value="cancel" formnovalidate>Cancel and go back</button>
-  </form>`;
-    root.innerHTML = `<section class="signin-shell"><div class="signin-intro is-plain">${masthead(app_config_default.logo, app_config_default.title)}
-  <div class="signin-identity"><h1>Your identity.<br>Your choices.</h1><p class="signin-description">One account across every app that uses Fidj, and a separate set of choices for each one.</p></div>
-  ${highlightCells(app_config_default.highlights)}</div>
-  <div class="signin-form"><div>${body}</div>
-  <div class="signin-trust"><p class="signin-trust-head"><img class="signin-logo" src="./fidj-logo.png" alt="Fidj"><strong>What Fidj is</strong></p><p>Fidj holds your account so each app does not have to. You can see every app you use, what it holds, and take it back \u2014 at any time.</p></div></div>
-  ${badgeStrip(app_config_default.badges)}</section>`;
-    if (element("interaction")) bindPasswordReveal(element("interaction"));
-    element("not-me")?.addEventListener("click", () => {
+    const mode = details.awaiting ? "waiting" : details.prompt === "login" ? "login" : "consent";
+    root.innerHTML = `<style>${oidcInteractionStyles}</style>${oidcInteractionMarkup({
+      mode,
+      appTitle: details.app.title,
+      action: action2,
+      csrf: details.csrf,
+      notice: interactionError ? refusals[interactionError] || refusals.refused : void 0,
+      email: typed,
+      forgotHref: `${app_config_default.dashboardUrl}/#/forgot`,
+      waitingEmail: details.awaiting,
+      resent: interactionResent,
+      notYet: interactionNotYet,
+      scopes: details.scopes.filter((scope) => scopeMeaning[scope]).map((scope) => scopeMeaning[scope]),
+      agreement: details.agreement || void 0,
+      // The agreement is a document read in the browser, like the privacy notice.
+      agreementHref: details.termsUri || void 0,
+      recognisedEmail: details.recognisedEmail || void 0,
+      logoSrc: "./fidj-logo.png"
+    })}`;
+    bindOidcInteraction(root);
+    root.querySelector('button[value="switch"]')?.addEventListener("click", () => {
       forgetSignIn(app_config_default.appId);
       try {
         sessionStorage.removeItem("fidj.interaction.email");
