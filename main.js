@@ -7590,7 +7590,7 @@
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.bpInfo = void 0;
-      exports.bpInfo = { version: "v3.18.0" };
+      exports.bpInfo = { version: "v3.18.1" };
     }
   });
 
@@ -8139,10 +8139,10 @@
               this.logger.log("fidj.sdk.service.sync refreshConnection done. ");
             } catch (err) {
               this.logger.warn("fidj.sdk.service.sync refreshConnection failed : ", err);
-              if ((err === null || err === void 0 ? void 0 : err.code) === 403 || (err === null || err === void 0 ? void 0 : err.code) === 410) {
+              if ((err === null || err === void 0 ? void 0 : err.code) === 401 || (err === null || err === void 0 ? void 0 : err.code) === 403 || (err === null || err === void 0 ? void 0 : err.code) === 410) {
                 yield this.logout(true);
               }
-              throw new FidjError_1.FidjError(403, "not connected");
+              throw new FidjError_1.FidjError(401, "not connected");
             }
             if (!this.sdk.useDB) {
               return;
@@ -10757,7 +10757,7 @@
     apiEndpoint: "https://api.fidj.ovh/v3",
     dashboardUrl: "https://fidj.ovh",
     title: "Mat Cloud App",
-    releaseVersion: "3.18.0",
+    releaseVersion: "3.18.1",
     localDemo: false,
     allowAnonymous: false,
     signin: "both",
@@ -10889,7 +10889,7 @@
     });
     const result = await response.json();
     if (!response.ok) {
-      if ([401, 403].includes(response.status)) {
+      if (response.status === 401) {
         signedIn = false;
         await sdk.logout(true);
       }
