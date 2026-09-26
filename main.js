@@ -7590,7 +7590,7 @@
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.bpInfo = void 0;
-      exports.bpInfo = { version: "v3.16.0" };
+      exports.bpInfo = { version: "v3.17.0" };
     }
   });
 
@@ -9982,7 +9982,7 @@
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.bpInfo = void 0;
-      exports.bpInfo = { version: "v3.16.0" };
+      exports.bpInfo = { version: "v3.17.0" };
     }
   });
 
@@ -10118,7 +10118,11 @@
       forget,
       // Fidj is the only door: it collects the agreement itself, a moment later,
       // on the screen that names the app — and records it with its version.
-      disclosure: both ? { label: "Inline form", controls: "email-entry", expanded: false } : null
+      disclosure: both ? {
+        label: "Or with your email",
+        controls: "email-entry",
+        expanded: false
+      } : null
     };
   }
   function agreementModel(title, agreement, state = {}) {
@@ -10286,6 +10290,49 @@
   function returnNoticeModel(asking) {
     return `When you are done, this window closes and takes you back to ${asking}.`;
   }
+  var MONTHS = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec"
+  ];
+  function formatDate(value, mode = "date") {
+    if (value === null || value === void 0 || value === "")
+      return "";
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime()))
+      return "";
+    const day = `${date.getDate()} ${MONTHS[date.getMonth()]} ${date.getFullYear()}`;
+    if (mode === "date")
+      return day;
+    const time = `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+    return `${day}, ${time}`;
+  }
+  var optionalPurposes = [
+    {
+      key: "analytics",
+      title: "Analytics",
+      description: "Help this app understand how its features are used."
+    },
+    {
+      key: "communications",
+      title: "Communications",
+      description: "Receive optional news and updates from this app."
+    },
+    {
+      key: "optionalData",
+      title: "Optional data",
+      description: "Allow additional data beyond the essential service."
+    }
+  ];
 
   // ../../../entry/dist/remembered.js
   var hintKey = (appId) => "fidj.entry." + appId;
@@ -10311,7 +10358,7 @@
   }
 
   // ../../../entry/dist/server.js
-  var oidcInteractionStyles = `.oidc-page,.oidc-page *{box-sizing:border-box}.oidc-page{width:min(100%,720px);max-width:none;padding:0;font:16px system-ui;color:#153e37;text-align:left;min-height:calc(100vh - 48px);margin:0 auto;overflow:hidden;border:1px solid #b9ccc0;border-radius:20px;background:white}.oidc-page .oidc-brand{display:flex;align-items:center;gap:16px;padding:18px 28px;background:#173e36;color:white}.oidc-page .oidc-brand img{width:48px;height:48px}.oidc-page .oidc-brand p{margin:0;font-size:21px;font-weight:700;line-height:1.08}.oidc-page section{padding:32px 36px 40px}.oidc-page section>h1{margin:0 0 10px;font-size:30px;line-height:1.15}.oidc-page section>p{line-height:1.45}.oidc-page form{margin-top:24px}.oidc-page label{display:block;margin:20px 0 8px}.oidc-page input,.oidc-page button{width:100%;padding:14px;border:1px solid #b9ccc0;border-radius:10px;font:inherit}.oidc-page button{margin-top:14px;background:#173e36;color:white;cursor:pointer;font-weight:600}.oidc-page .secondary{background:white;color:#173e36}.oidc-page .cancel{border-color:transparent;background:transparent}.oidc-page .notice{margin:0 0 4px;padding:12px 14px;border:1px solid #ef4b42;background:#fdecea;color:#8a1c16;border-radius:8px}.oidc-page .return{margin:0;font-size:14px;color:#3f5c52}.oidc-page .field-head,.oidc-page .password-field{display:flex;align-items:flex-end;gap:12px}.oidc-page .field-head{justify-content:space-between}.oidc-page .field-head label{margin-bottom:0}.oidc-page .field-link{font-size:14px;color:#3f5c52}.oidc-page .password-field input{flex:1}.oidc-page .password-field button{width:auto;margin-top:0}.oidc-page .account-picker{display:grid;grid-template-columns:44px minmax(0,1fr) 24px;align-items:center;gap:12px;padding:12px 14px;border:1px solid #b9ccc0;border-radius:12px;background:#f3f6f1}.oidc-page .account-avatar{display:grid;width:44px;height:44px;place-items:center;border-radius:50%;background:#173e36;color:white;font-size:18px;font-weight:700}.oidc-page .account-copy{display:flex;min-width:0;flex-direction:column;gap:2px}.oidc-page .account-copy small{font-size:12px;color:#3f5c52}.oidc-page .account-email{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.oidc-page .account-check{font-size:20px;font-weight:700}.oidc-page .permission-title{margin:22px 0 8px;font-weight:600}.oidc-page .permission-list{margin:0;padding:12px 14px 12px 36px;border:1px solid #b9ccc0;border-radius:12px}.oidc-page .permission-list li{padding:3px 0}.oidc-page .account-switch{text-align:left}.oidc-page .agreement-choice{display:flex;align-items:flex-start;gap:10px;margin:20px 0 8px}.oidc-page .agreement-choice input{width:auto}.oidc-page .fineprint{margin:6px 0;font-size:14px;color:#3f5c52}.oidc-page .agreement-link{display:inline-block;margin:2px 0 8px;color:#173e36;font-weight:600}@media(max-width:700px){.oidc-page{min-height:100vh;border:0;border-radius:0}.oidc-page .oidc-brand{padding:16px 24px}.oidc-page .oidc-brand img{width:44px;height:44px}.oidc-page .oidc-brand p{font-size:19px}.oidc-page section{padding:26px 24px 34px}.oidc-page section>h1{font-size:26px}}.oidc-page .divider{display:flex;align-items:center;gap:12px;margin:22px 0 0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#3f5c52}.oidc-page .divider::before,.oidc-page .divider::after{content:"";flex:1;height:1px;background:#b9ccc0}.oidc-page button:disabled{border-color:#d4d9d5;background:#d4d9d5;color:#778079;cursor:not-allowed}.oidc-page .agreement-choice a{color:#173e36;font-weight:600}.oidc-page.oidc-page :is(h1,p,label,small,strong,a,li,span,input,button){font-family:inherit;letter-spacing:normal;text-transform:none;text-wrap:wrap}.oidc-page.oidc-page{margin:0 auto;max-width:none;padding:0}.oidc-page.oidc-page :is(h1,p,label,li,strong){color:inherit}.oidc-page.oidc-page label{font-size:inherit;margin:20px 0 8px}.oidc-page.oidc-page .agreement-choice{margin:20px 0 8px}.oidc-page.oidc-page h1{font-weight:700;font-size:30px;line-height:1.15;margin:0 0 10px}.oidc-page.oidc-page .fineprint,.oidc-page.oidc-page .return,.oidc-page.oidc-page .field-link{color:#3f5c52}`;
+  var oidcInteractionStyles = `.oidc-page,.oidc-page *{box-sizing:border-box}.oidc-page{width:min(100%,560px);max-width:none;padding:0;font:15px/1.5 "IBM Plex Sans",system-ui,-apple-system,sans-serif;color:#14110f;text-align:left;min-height:calc(100vh - 48px);margin:0 auto;overflow:hidden;border:1px solid #e4ded7;border-radius:2px;background:#ffffff}.oidc-page .oidc-brand{display:flex;align-items:center;gap:14px;padding:16px 28px;background:#14110f;color:#fbfaf8}.oidc-page .oidc-brand img{width:36px;height:36px}.oidc-page .oidc-brand p{margin:0;font-family:"Instrument Serif",Georgia,"Times New Roman",serif;font-size:20px;font-weight:400;line-height:1.1}.oidc-page section{padding:30px 32px 36px}.oidc-page section>p{line-height:1.5;color:#4a4540}.oidc-page form{margin-top:20px}.oidc-page label{display:block;margin:18px 0 7px;font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#6b655f}.oidc-page input,.oidc-page button{width:100%;padding:12px 14px;border:1px solid #dfd9d2;border-radius:2px;font:inherit;background:#ffffff;color:#14110f}.oidc-page input:focus{outline:none;border-color:#14110f}.oidc-page button{margin-top:12px;background:#14110f;border-color:#14110f;color:#fbfaf8;cursor:pointer;font-weight:600}.oidc-page .secondary{background:transparent;border-color:#dfd9d2;color:#14110f;font-weight:500}.oidc-page .cancel{border-color:transparent;background:transparent;color:#6b655f;font-weight:500}.oidc-page .notice{margin:0 0 4px;padding:12px 14px;border:1px solid #e8d9d6;border-left:3px solid #b8352c;background:#fdf7f6;color:#8c2a22;border-radius:2px}.oidc-page .return{margin:0;font-size:13px;color:#6b655f}.oidc-page .field-head,.oidc-page .password-field{display:flex;align-items:flex-end;gap:12px}.oidc-page .field-head{justify-content:space-between}.oidc-page .field-head label{margin-bottom:7px}.oidc-page .field-link{font-size:13px;color:#6b655f}.oidc-page .password-field input{flex:1}.oidc-page .password-field button{width:auto;margin-top:0;background:transparent;border-color:#dfd9d2;color:#14110f;font-weight:500}.oidc-page .account-picker{display:grid;grid-template-columns:40px minmax(0,1fr) 24px;align-items:center;gap:12px;padding:12px 14px;border:1px solid #e4ded7;border-radius:2px;background:#f5f1ec}.oidc-page .account-avatar{display:grid;width:40px;height:40px;place-items:center;border-radius:50%;background:#14110f;color:#fbfaf8;font-size:16px;font-weight:600}.oidc-page .account-copy{display:flex;min-width:0;flex-direction:column;gap:2px}.oidc-page .account-copy small{font-size:12px;color:#6b655f}.oidc-page .account-email{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.oidc-page .account-check{font-size:18px;font-weight:600}.oidc-page .permission-title{margin:22px 0 8px;font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#6b655f}.oidc-page .permission-list{margin:0;padding:10px 14px 10px 32px;border:1px solid #e4ded7;border-radius:2px}.oidc-page .permission-list li{padding:3px 0}.oidc-page .account-switch{text-align:left}.oidc-page .agreement-choice{display:flex;align-items:flex-start;gap:10px;margin:20px 0 8px}.oidc-page .agreement-choice input{width:auto;accent-color:#14110f}.oidc-page .fineprint{margin:6px 0;font-size:13px;color:#6b655f}.oidc-page a{color:#14110f;text-decoration:underline;text-decoration-color:#dfd9d2;text-underline-offset:3px}@media(max-width:700px){.oidc-page{min-height:100vh;border:0}.oidc-page .oidc-brand{padding:14px 20px}.oidc-page section{padding:24px 20px 30px}.oidc-page section>h1{font-size:28px}}.oidc-page .divider{display:flex;align-items:center;gap:12px;margin:20px 0 0;font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#6b655f}.oidc-page .divider::before,.oidc-page .divider::after{content:"";flex:1;height:1px;background:#e4ded7}.oidc-page button:disabled{opacity:.45;cursor:not-allowed}.oidc-page .agreement-choice a{font-weight:600}.oidc-page.oidc-page :is(h1,p,small,strong,a,li,span,input,button){letter-spacing:normal;text-transform:none;text-wrap:wrap}.oidc-page.oidc-page :is(p,small,strong,a,li,span,input,button){font-family:inherit}.oidc-page.oidc-page{margin:0 auto;max-width:none;padding:0}.oidc-page.oidc-page :is(h1,li,strong){color:inherit}.oidc-page.oidc-page label:not(.agreement-choice){font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#6b655f;margin:18px 0 7px}.oidc-page.oidc-page .agreement-choice{margin:20px 0 8px;font-family:inherit;font-size:14px;letter-spacing:normal;text-transform:none;color:#14110f}.oidc-page.oidc-page h1{font-family:"Instrument Serif",Georgia,"Times New Roman",serif;font-weight:400;font-size:32px;line-height:1.1;margin:0 0 10px;color:#14110f}.oidc-page.oidc-page .fineprint,.oidc-page.oidc-page .return,.oidc-page.oidc-page .field-link{color:#6b655f}`;
   var passkeyDoor = (page) => page.passkey ? `<button class="passkey" name="action" value="${escape(passkeyDoorModel.value)}" data-passkey-options="${escape(JSON.stringify(page.passkey.options))}" formnovalidate>${escape(passkeyDoorModel.label)}</button><input type="hidden" name="passkeyTicket" value="${escape(page.passkey.ticket)}"><input type="hidden" name="passkey" value=""><p class="divider"><span>${escape(emailDividerLabel)}</span></p>` : "";
   var loginFields = (page) => {
     const model = credentialsModel({ email: page.email || "", password: "" });
@@ -10455,6 +10502,29 @@
   }
   function bindOidcInteraction(root2) {
     bindPasswordReveal(root2);
+    const door = root2.querySelector('button[value="passkey"][data-passkey-options]');
+    if (door && !passkeySupported())
+      door.hidden = true;
+    door?.addEventListener("click", async (event) => {
+      event.preventDefault();
+      const form = door.form;
+      if (!form)
+        return;
+      try {
+        const answer = await passkeyAssertion(JSON.parse(door.dataset.passkeyOptions || "{}"));
+        const field = form.querySelector('input[name="passkey"]');
+        if (field)
+          field.value = JSON.stringify(answer);
+        const action2 = document.createElement("input");
+        action2.type = "hidden";
+        action2.name = "action";
+        action2.value = "passkey";
+        form.append(action2);
+        form.querySelectorAll("[required]").forEach((element2) => element2.removeAttribute("required"));
+        form.submit();
+      } catch {
+      }
+    });
     const checkbox = root2.querySelector('input[name="terms"]');
     const submit = root2.querySelector('button[value="continue"]');
     if (!checkbox || !submit)
@@ -10675,7 +10745,7 @@
     apiEndpoint: "https://api.fidj.ovh/v3",
     dashboardUrl: "https://fidj.ovh",
     title: "Mat Cloud App",
-    releaseVersion: "3.16.0",
+    releaseVersion: "3.17.0",
     localDemo: false,
     allowAnonymous: false,
     signin: "both",
@@ -10898,7 +10968,7 @@
   var PUBLIC_ROUTE = "pub";
   var recognising = false;
   function mightBeRecognised() {
-    if (!oidc || !isFidjItself) return false;
+    if (!oidc || !(isFidjItself || signInHint(app_config_default.appId))) return false;
     if ((moduleRoute() || "").split("/")[0] === PUBLIC_ROUTE) return false;
     if (["forgot", "reset", "verify"].includes(currentRoute())) return false;
     if (oidc.signedOutHere()) return false;
@@ -10909,7 +10979,7 @@
     }
   }
   async function askWhetherFidjKnowsThisBrowser() {
-    if (!oidc || !isFidjItself || sdk.isLoggedIn() || oidc.signedOutHere())
+    if (!oidc || !(isFidjItself || signInHint(app_config_default.appId)) || sdk.isLoggedIn() || oidc.signedOutHere())
       return false;
     if ((moduleRoute() || "").split("/")[0] === PUBLIC_ROUTE) return false;
     if (["forgot", "reset", "verify"].includes(currentRoute())) return false;
@@ -11055,7 +11125,7 @@
       return;
     }
     if (route === "profile") {
-      root.innerHTML = `<section class="content-account">${profileSummary()}<div class="card profile-body">${banner()}${accountForm("account", { linkToken, verificationConfirmed, emailVerified, accountEmail }, { compact: true })}${privacyBlock()}</div></section>`;
+      root.innerHTML = `<section class="content-account">${profileSummary()}<div class="card profile-body">${banner()}${emailVerified ? accountRows() : accountForm("account", { linkToken, verificationConfirmed, emailVerified, accountEmail }, { compact: true })}${privacyBlock()}</div></section>`;
       renderNav("account");
       wireAccount("account");
       wireSignOut();
@@ -11279,9 +11349,10 @@
     element("terms")?.addEventListener(
       "click",
       () => void action(async () => {
+        const agreement = await readAgreement();
         await request(appPath + "/consents", "PUT", {
           terms: true,
-          cguVersion: "starter-demo-1",
+          ...agreement ? { cguVersion: agreement.version } : {},
           source: "profile"
         });
         await refresh();
@@ -11338,18 +11409,24 @@
       });
     });
   }
+  function accountRows() {
+    return `<div class="member-rows"><div class="member-row"><div><strong>Email</strong><small>${escape(accountEmail)} \xB7 verified</small></div><a href="${escape(app_config_default.dashboardUrl)}/#/my/profile" target="_blank" rel="noopener noreferrer">Manage on Fidj \u2197</a></div></div>`;
+  }
   function privacyBlock() {
-    return `<h2>What ${escape(app_config_default.title)} holds</h2><p>Roles: ${roles.map(escape).join(" \xB7 ") || "No assigned roles"}</p><button id="refresh">Refresh access</button>
-  <p>These choices apply only to this app.${app_config_default.allowAnonymous ? " You can also view the public content by entering anonymously." : ""}</p>
-  <p>Service agreement: ${consent.terms ? "Accepted" : "Not recorded"}. ${consent.terms ? "Leaving withdraws this agreement." : 'This generated example uses a demo agreement. <button id="terms">Accept demo agreement</button>'}</p>
-  ${["analytics", "communications", "optionalData"].map((key, i) => `<label class="toggle"><span>${["Analytics", "Communications", "Optional data"][i]}</span><input type="checkbox" data-purpose="${key}" ${consent[key] ? "checked" : ""}></label>`).join("")}
-  <h3>Consent history</h3>${history.length ? history.slice().reverse().map(
-      (entry) => `<p>${escape(entry.type)} \xB7 ${entry.granted ? "Accepted" : "Withdrawn"} \xB7 ${escape(entry.changedAt)}</p>`
-    ).join("") : "<p>No changes yet.</p>"}
-  <button id="export">Export</button>
-  <p>This app stores its session in this browser. The export covers Fidj-held records for this membership. There is no separate app database in this static template.</p>
-  ${roles.includes("Owner") ? "<p>Resolve app ownership before leaving.</p>" : leaving ? '<p>Confirm departure: your membership and its Fidj-held data will be removed. Your other apps remain available.</p><button id="confirm-leave" class="danger">Leave &amp; erase</button><button id="cancel-leave">Keep my membership</button>' : '<button id="leave" class="danger">Leave &amp; erase</button>'}
-  <p class="leaving"><a href="${escape(app_config_default.dashboardUrl)}/#/my" target="_blank" rel="noopener">Open Fidj to manage every app you use \u2197</a><br><small>Fidj is the account provider behind ${escape(app_config_default.title)}. This opens it in a new tab; you stay signed in here.</small></p>`;
+    const acceptedVersion = String(consent.termsVersion || "");
+    const agreementHref = `${app_config_default.apiEndpoint}/apps/${encodeURIComponent(app_config_default.appId)}/agreements/${encodeURIComponent(acceptedVersion)}`;
+    const agreementRow = consent.terms ? `<div class="member-row"><div><strong>Service agreement</strong>${acceptedVersion ? `<a class="basis" href="${escape(agreementHref)}" target="_blank" rel="noopener noreferrer">Contract \xB7 agreement ${escape(acceptedVersion)} \u2197</a>` : '<span class="basis">Contract</span>'}</div><small class="nosw">Part of the service. To stop it, leave the app.</small></div>` : '<div class="member-row"><div><strong>Service agreement</strong><small>Not accepted yet \u2014 accept it or leave the app.</small></div><button id="terms" class="primary">Accept</button></div>';
+    const choices = optionalPurposes.map(
+      (purpose) => `<label class="member-row" for="purpose-${purpose.key}"><div><strong>${escape(purpose.title)}</strong><small>${escape(purpose.description)}</small><span class="basis consent">Consent</span></div><span class="switch"><input type="checkbox" role="switch" id="purpose-${purpose.key}" data-purpose="${purpose.key}" ${consent[purpose.key] ? "checked" : ""}><span class="switch-state" aria-hidden="true">${consent[purpose.key] ? "On" : "Off"}</span></span></label>`
+    ).join("");
+    const entries = history.length ? history.slice().reverse().map(
+      (entry) => `<p>${escape(formatDate(entry.changedAt, "datetime"))} \xB7 ${escape(entry.type)} ${entry.granted ? "given" : "withdrawn"}</p>`
+    ).join("") : "<p>No changes yet.</p>";
+    const leave = roles.includes("Owner") ? "<small>You own this app: hand it over or delete it on Fidj before leaving.</small>" : leaving ? '<p>Your membership and what this app holds for you will be erased. Your other apps remain available.</p><button id="confirm-leave" class="danger">Leave &amp; erase</button><button id="cancel-leave">Keep my membership</button>' : '<button id="leave" class="danger">Leave &amp; erase</button>';
+    return `<h2>Your membership</h2><div class="member-rows">${agreementRow}${choices}</div>
+  <details class="member-history"><summary>History</summary>${entries}</details>
+  <div class="member-actions"><button id="export">Export</button>${leave}</div>
+  <p class="leaving"><a href="${escape(app_config_default.dashboardUrl)}/#/my/gdpr" target="_blank" rel="noopener noreferrer">Open Fidj to manage every app you use \u2197</a></p>`;
   }
   var interactionId = "";
   var interactionError = "";
@@ -11430,6 +11507,7 @@
       // The agreement is a document read in the browser, like the privacy notice.
       agreementHref: details.termsUri || void 0,
       recognisedEmail: details.recognisedEmail || void 0,
+      passkey: details.passkey,
       logoSrc: "./fidj-logo.png"
     })}`;
     bindOidcInteraction(root);
