@@ -975,6 +975,7 @@ body.has-module {
     padding: 36px 24px 32px;
   }
   .signin-form {
+    order: -1;
     padding: 36px 24px 32px;
   }
   .signin-description {
@@ -994,7 +995,6 @@ body.has-module {
   font-size: clamp(2rem, 5vw, 3.5rem);
 }
 .content-account {
-  max-width: 680px;
   margin: 2rem auto;
 }
 .profile-summary {
@@ -1350,14 +1350,14 @@ button.quiet {
   width: auto;
 }
 .primary.fidj-entry {
-  background: var(--fidj-accent);
-  border-color: var(--fidj-accent);
-  color: var(--fidj-on-accent);
+  background: var(--fidj-ink);
+  border-color: var(--fidj-ink);
+  color: var(--fidj-paper);
   margin-top: 0;
 }
 .primary.fidj-entry:hover:not(:disabled) {
-  background: var(--fidj-accent-strong);
-  border-color: var(--fidj-accent-strong);
+  background: var(--fidj-ink-raised);
+  border-color: var(--fidj-ink-raised);
 }
 .primary.fidj-entry.is-waiting,
 .primary.fidj-entry.is-waiting:hover:not(:disabled) {
@@ -1608,11 +1608,6 @@ input[role=switch]:focus-visible {
   margin: 0 0 16px;
   font-size: 13px;
   color: var(--fidj-text-muted);
-}
-.member-history summary {
-  cursor: pointer;
-  font-weight: 500;
-  color: var(--fidj-text);
 }
 .member-history p {
   margin: 6px 0;

@@ -10267,7 +10267,8 @@
         type: "password",
         autocomplete: "current-password",
         value: state.password,
-        placeholder: "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"
+        // No row of dots: it only restates that the field is masked.
+        placeholder: ""
       },
       forgot: { href: "#/forgot", label: "Forgot?" },
       reveal: { id: "reveal", kind: "quiet", label: "Show" },
@@ -10333,6 +10334,19 @@
       description: "Allow additional data beyond the essential service."
     }
   ];
+  function historyLine(entry) {
+    const when = formatDate(entry.changedAt, "datetime");
+    if (entry.type === "terms")
+      return {
+        when,
+        what: entry.granted ? `Service agreement accepted${entry.cguVersion ? ` \xB7 version ${entry.cguVersion}` : ""}` : "Service agreement withdrawn"
+      };
+    const title = optionalPurposes.find((purpose) => purpose.key === entry.type)?.title ?? entry.type.charAt(0).toUpperCase() + entry.type.slice(1);
+    return {
+      when,
+      what: `${title} \u2014 ${entry.granted ? "turned on" : "turned off"}`
+    };
+  }
 
   // ../../../entry/dist/remembered.js
   var hintKey = (appId) => "fidj.entry." + appId;
@@ -10419,7 +10433,7 @@
   function credentialFields(state, options = {}) {
     const model = credentialsModel(state);
     const passkey = options.passkey ? `<button class="primary passkey" type="submit" id="${escape(passkeyDoorModel.id)}" name="${escape(passkeyDoorModel.name)}" value="${escape(passkeyDoorModel.value)}" formnovalidate>${escape(passkeyDoorModel.label)}</button><p class="entry-divider"><span>${escape(emailDividerLabel)}</span></p>` : "";
-    return passkey + `<label for="email">${escape(model.email.label)}</label><input id="email" type="email" value="${escape(model.email.value)}" placeholder="${escape(model.email.placeholder)}" autocomplete="username"><div class="field-head"><label for="password">${escape(model.password.label)}</label><a href="${escape(model.forgot.href)}">${escape(model.forgot.label)}</a></div><div class="password-field"><input id="password" type="password" value="${escape(model.password.value)}" placeholder="${escape(model.password.placeholder)}" autocomplete="current-password"><button type="button" id="reveal" aria-controls="password">${escape(model.reveal.label)}</button></div><button class="primary" type="submit" name="entry" value="credentials">${escape(model.submit.label)}</button><button class="secondary" type="submit" name="signup" value="true">${escape(model.signup.label)}</button>`;
+    return passkey + `<label for="email">${escape(model.email.label)}</label><input id="email" type="email" value="${escape(model.email.value)}" placeholder="${escape(model.email.placeholder)}" autocomplete="username"><div class="field-head"><label for="password">${escape(model.password.label)}</label><a href="${escape(model.forgot.href)}">${escape(model.forgot.label)}</a></div><div class="password-field"><input id="password" type="password" value="${escape(model.password.value)}" ${attribute("placeholder", model.password.placeholder)} autocomplete="current-password"><button type="button" id="reveal" aria-controls="password">${escape(model.reveal.label)}</button></div><button class="primary" type="submit" name="entry" value="credentials">${escape(model.submit.label)}</button><button class="secondary" type="submit" name="signup" value="true">${escape(model.signup.label)}</button>`;
   }
   function walletDoor() {
     return `<p class="wallet-door" aria-disabled="true"><span>${escape(walletDoorModel.label)}</span><span class="wallet-date">${escape(walletDoorModel.date)}</span></p>`;
@@ -10624,11 +10638,24 @@
     const version = String(consent2.termsVersion || "");
     const agreementRow = consent2.terms ? `<div class="member-row"><div><strong>Service agreement</strong>${options.agreementHref && version ? `<a class="basis" href="${escape(options.agreementHref)}" target="_blank" rel="noopener noreferrer">Contract \xB7 agreement ${escape(version)} \u2197</a>` : '<span class="basis">Contract</span>'}</div><small class="nosw">Part of the service. To stop it, leave the app.</small></div>` : '<div class="member-row"><div><strong>Service agreement</strong><small>Not accepted yet \u2014 accept it or leave the app.</small></div><button id="accept-terms" class="primary">Accept</button></div>';
     const choices = optionalPurposes.map((purpose) => `<label class="member-row" for="purpose-${purpose.key}"><div><strong>${escape(purpose.title)}</strong><small>${escape(purpose.description)}</small><span class="basis consent">Consent</span></div><span class="switch"><input type="checkbox" role="switch" id="purpose-${purpose.key}" data-purpose="${purpose.key}"${consent2[purpose.key] ? " checked" : ""}><span class="switch-state" aria-hidden="true">${consent2[purpose.key] ? "On" : "Off"}</span></span></label>`).join("");
-    const entries = history2.length ? history2.slice().reverse().map((entry) => `<p>${escape(formatDate(entry.changedAt, "datetime"))} \xB7 ${escape(entry.type)} ${entry.granted ? "given" : "withdrawn"}</p>`).join("") : "<p>No changes yet.</p>";
+    const entries = history2.length ? history2.slice().reverse().map((entry) => {
+      const line = historyLine(entry);
+      return `<p><time>${escape(line.when)}</time> \xB7 ${escape(line.what)}</p>`;
+    }).join("") : "<p>No changes yet.</p>";
     const leave = options.owner ? "<small>You own this app: hand it over or delete it on Fidj before leaving.</small>" : options.leaving ? `<div role="alertdialog" aria-labelledby="leave-title"><p id="leave-title">${escape(options.leaveScope || "Your membership and what this app holds for you will be erased. Your other apps remain available.")}</p><button id="confirm-leave" class="danger">Leave &amp; erase</button><button id="cancel-leave">Keep my membership</button></div>` : '<button id="leave" class="danger">Leave &amp; erase</button>';
     return `<h2>Your membership</h2><div class="member-rows">${agreementRow}${choices}</div>
-  <details class="member-history"><summary>History</summary>${entries}</details>
-  <div class="member-actions"><button id="export">Export</button>${leave}</div>${options.manageHref ? `<p class="leaving"><a href="${escape(options.manageHref)}" target="_blank" rel="noopener noreferrer">Open Fidj to manage every app you use \u2197</a></p>` : ""}`;
+  <div id="member-history" class="member-history" hidden>${entries}</div>
+  <div class="member-actions"><button type="button" id="history-toggle" aria-expanded="false" aria-controls="member-history">History</button><button id="export">Export</button>${leave}</div>${options.manageHref ? `<p class="leaving"><a href="${escape(options.manageHref)}" target="_blank" rel="noopener noreferrer">Open Fidj to manage every app you use \u2197</a></p>` : ""}`;
+  }
+  function bindMemberHistory(root2) {
+    const toggle = root2.querySelector("#history-toggle");
+    const list = root2.querySelector("#member-history");
+    if (!toggle || !list)
+      return;
+    toggle.onclick = () => {
+      list.hidden = !list.hidden;
+      toggle.setAttribute("aria-expanded", String(!list.hidden));
+    };
   }
 
   // ../../../entry/dist/provider-window.js
@@ -10775,6 +10802,43 @@
     domain: "mlefree.com"
   };
 
+  // src/api-request.ts
+  function authorizedRequest(options) {
+    const send = async (path, method, data, forceRefresh) => {
+      if (!options.providerSession()) await options.sdk.sync({ forceRefresh });
+      const token = await options.sdk.fidjGetIdToken();
+      return (options.fetch ?? fetch)(options.baseUrl + path, {
+        method,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: data === void 0 ? void 0 : JSON.stringify(data),
+        signal: AbortSignal.timeout(options.timeoutMs ?? 1e4)
+      });
+    };
+    return async function request2(path, method = "GET", data) {
+      let response;
+      try {
+        response = await send(path, method, data, false);
+        if (response.status === 401 && !options.providerSession())
+          response = await send(path, method, data, true);
+      } catch (error) {
+        if (!options.sdk.isLoggedIn()) options.onSignedOut();
+        throw error;
+      }
+      const result = await response.json();
+      if (!response.ok) {
+        if (response.status === 401) {
+          options.onSignedOut();
+          await options.sdk.logout(true);
+        }
+        throw new Error(result.message || result.status || "Please retry.");
+      }
+      return result;
+    };
+  }
+
   // src/content.ts
   var sdk = new import_node.FidjNodeService();
   var oidc = app_config_default.oidcIssuer ? new import_node.FidjOidcClient({ issuer: app_config_default.oidcIssuer, clientId: app_config_default.appId, redirectUri: window.location.origin + window.location.pathname, apiEndpoint: app_config_default.apiEndpoint, storage: sessionStorage }) : null;
@@ -10876,27 +10940,14 @@
       })
     );
   }
-  async function request(path, method = "GET", data) {
-    const token = await sdk.fidjGetIdToken();
-    const response = await fetch(app_config_default.apiEndpoint + path, {
-      method,
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json"
-      },
-      body: data === void 0 ? void 0 : JSON.stringify(data),
-      signal: AbortSignal.timeout(1e4)
-    });
-    const result = await response.json();
-    if (!response.ok) {
-      if (response.status === 401) {
-        signedIn = false;
-        await sdk.logout(true);
-      }
-      throw new Error(result.message || result.status || "Please retry.");
+  var request = authorizedRequest({
+    sdk,
+    providerSession: () => !!oidc?.hasSession(),
+    baseUrl: app_config_default.apiEndpoint,
+    onSignedOut: () => {
+      signedIn = false;
     }
-    return result;
-  }
+  });
   async function refresh() {
     const membership = await request(
       `/apps/${encodeURIComponent(app_config_default.appId)}/me`
@@ -11002,6 +11053,7 @@
       return false;
     }
     try {
+      rememberRoute();
       window.location.assign(await oidc.beginLogin({ silent: true }));
       return true;
     } catch {
@@ -11044,12 +11096,36 @@
       }
       await refresh();
       anonymous = false;
-      navigate("content");
+      navigate(takeReturnRoute());
     });
   }
   function navigate(route) {
     if (route !== currentRoute()) window.history.pushState(null, "", "#/" + route);
     if (!busy) render();
+  }
+  var RETURN_ROUTE = "fidj.return-route";
+  var returnRoute = "";
+  function worthReturningTo(route) {
+    const name = route.split("?")[0];
+    return Boolean(name) && !["content", "signin", "forgot", "reset", "verify"].includes(name);
+  }
+  function rememberRoute(route = window.location.hash.slice(2)) {
+    if (!worthReturningTo(route)) return;
+    returnRoute = route;
+    try {
+      sessionStorage.setItem(RETURN_ROUTE, route);
+    } catch {
+    }
+  }
+  function takeReturnRoute() {
+    let route = returnRoute;
+    returnRoute = "";
+    try {
+      route = sessionStorage.getItem(RETURN_ROUTE) || route;
+      sessionStorage.removeItem(RETURN_ROUTE);
+    } catch {
+    }
+    return worthReturningTo(route) ? route : "content";
   }
   function moduleRoute() {
     const route = window.location.hash.slice(2).split("?")[0];
@@ -11116,9 +11192,10 @@
       return;
     }
     let route = currentRoute();
-    if (!signedIn && !(app_config_default.allowAnonymous && anonymous) && !["forgot", "reset", "verify"].includes(route))
+    if (!signedIn && !(app_config_default.allowAnonymous && anonymous) && !["forgot", "reset", "verify"].includes(route)) {
+      if (route !== "signin") rememberRoute();
       route = "signin";
-    else if (!["signin", "content", "privacy", ...accountRoutes].includes(route))
+    } else if (!["signin", "content", "privacy", ...accountRoutes].includes(route))
       route = "content";
     if (route === "privacy") route = signedIn ? "profile" : "signin";
     window.history.replaceState(null, "", "#/" + route);
@@ -11137,7 +11214,7 @@
       return;
     }
     if (route === "profile") {
-      root.innerHTML = `<section class="content-account">${profileSummary()}<div class="card profile-body">${banner()}${emailVerified ? accountRows() : accountForm("account", { linkToken, verificationConfirmed, emailVerified, accountEmail }, { compact: true })}${privacyBlock()}</div></section>`;
+      root.innerHTML = `<section class="content-account">${profileSummary()}<div class="profile-body">${banner()}${emailVerified ? accountRows() : accountForm("account", { linkToken, verificationConfirmed, emailVerified, accountEmail }, { compact: true })}${privacyBlock()}</div></section>`;
       renderNav("account");
       wireAccount("account");
       wireSignOut();
@@ -11162,7 +11239,7 @@
   <div class="signin-identity"><h1>${escape(app_config_default.welcome)}</h1><p class="signin-description">${escape(app_config_default.description)}</p></div>
   ${highlightCells(app_config_default.highlights)}</div>
   <div class="signin-form"><div>${banner()}<h2>Sign in to ${escape(app_config_default.title)}</h2><form id="signin">${credentialFields({ email: signInEmail, password: signInPassword }, { passkey: passkeyHere })}</form>${app_config_default.allowAnonymous ? `<div class="signin-divider"><span>or explore first</span></div><button class="anonymous-entry" id="anonymous">Enter anonymously <span aria-hidden="true">\u2192</span></button><p class="signin-footnote">No account needed to view the content.</p>` : ""}
-  ${app_config_default.title === "Fidj" ? walletDoor() : `<div class="signin-trust"><p class="signin-trust-head"><img class="signin-logo" src="./fidj-logo.png" alt="Fidj"><strong>Your account, with Fidj</strong></p><p>Signing in creates one Fidj account you keep across every app that uses Fidj.</p><p>You choose what this app may store \u2014 and can export or erase it at any moment.</p></div>`}</div>
+  ${app_config_default.title === "Fidj" ? walletDoor() : ""}</div>
   ${badgeStrip(app_config_default.badges)}</div></section>`;
     wireNav();
     element("anonymous")?.addEventListener("click", () => {
@@ -11341,10 +11418,11 @@
       }
       await refresh();
       anonymous = false;
-      navigate("content");
+      navigate(takeReturnRoute());
     })();
   }
   function wirePrivacy() {
+    bindMemberHistory(root);
     element("refresh")?.addEventListener("click", () => void action(refresh));
     element("signout")?.addEventListener(
       "click",
@@ -11615,7 +11693,7 @@
       if (interactionId) return;
       if (oidc && new URL(window.location.href).searchParams.has("state")) {
         const callback = new URL(window.location.href);
-        window.history.replaceState(null, "", window.location.pathname + "#/content");
+        window.history.replaceState(null, "", window.location.pathname + "#/" + takeReturnRoute());
         try {
           await oidc.completeLogin(callback);
         } catch (refusal) {
