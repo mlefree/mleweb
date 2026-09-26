@@ -7590,7 +7590,7 @@
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.bpInfo = void 0;
-      exports.bpInfo = { version: "v3.17.0" };
+      exports.bpInfo = { version: "v3.18.0" };
     }
   });
 
@@ -9982,7 +9982,7 @@
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.bpInfo = void 0;
-      exports.bpInfo = { version: "v3.17.0" };
+      exports.bpInfo = { version: "v3.18.0" };
     }
   });
 
@@ -10372,8 +10372,9 @@
     const agreement = agreementModel(page.appTitle, page.agreement || {});
     const initial = (page.recognisedEmail || "?").trim().charAt(0).toUpperCase();
     const identity = page.recognisedEmail ? `<div class="account-picker"><span class="account-avatar" aria-hidden="true">${escape(initial)}</span><span class="account-copy"><small>Signed in with Fidj</small><strong class="account-email">${escape(page.recognisedEmail)}</strong></span><span class="account-check" aria-hidden="true">\u2713</span></div>` : "";
-    const agreementChoice = page.agreement && page.agreementHref ? `<label class="agreement-choice"><input type="checkbox" name="terms" value="true" required> <span>I accept the <a class="agreement-document" href="${escape(page.agreementHref)}" target="_blank" rel="noopener noreferrer">service agreement \xB7 version ${escape(page.agreement.version)} \u2197</a></span></label>` : `<label class="agreement-choice"><input type="checkbox" name="terms" value="true" required> ${escape(agreement.checkboxLabel)}</label>`;
-    return `${identity}<p class="permission-title">${escape(page.appTitle)} will receive:</p><ul class="permission-list">${(page.scopes || []).map((scope) => `<li>${escape(scope)}</li>`).join("")}</ul>${agreementChoice}<button name="action" value="continue" disabled>Allow and continue</button><button class="secondary account-switch" name="action" value="switch" formnovalidate>Use another account</button><button class="cancel" name="action" value="cancel" formnovalidate>Cancel</button>`;
+    const onFile = page.agreementAccepted && page.agreement ? `<p class="fineprint">You accepted the ${page.agreementHref ? `<a class="agreement-document" href="${escape(page.agreementHref)}" target="_blank" rel="noopener noreferrer">service agreement \xB7 version ${escape(page.agreement.version)} \u2197</a>` : `service agreement \xB7 version ${escape(page.agreement.version)}`}.</p>` : "";
+    const agreementChoice = onFile ? onFile : page.agreement && page.agreementHref ? `<label class="agreement-choice"><input type="checkbox" name="terms" value="true" required> <span>I accept the <a class="agreement-document" href="${escape(page.agreementHref)}" target="_blank" rel="noopener noreferrer">service agreement \xB7 version ${escape(page.agreement.version)} \u2197</a></span></label>` : `<label class="agreement-choice"><input type="checkbox" name="terms" value="true" required> ${escape(agreement.checkboxLabel)}</label>`;
+    return `${identity}<p class="permission-title">${escape(page.appTitle)} will receive:</p><ul class="permission-list">${(page.scopes || []).map((scope) => `<li>${escape(scope)}</li>`).join("")}</ul>${agreementChoice}<button name="action" value="continue"${onFile ? "" : " disabled"}>Allow and continue</button><button class="secondary account-switch" name="action" value="switch" formnovalidate>Use another account</button><button class="cancel" name="action" value="cancel" formnovalidate>Cancel</button>`;
   };
   function interactionCopy(page) {
     const waiting = page.mode === "waiting";
@@ -10618,6 +10619,17 @@
       clientExtensionResults: {}
     };
   }
+  function memberCard(options) {
+    const { consent: consent2, history: history2 } = options;
+    const version = String(consent2.termsVersion || "");
+    const agreementRow = consent2.terms ? `<div class="member-row"><div><strong>Service agreement</strong>${options.agreementHref && version ? `<a class="basis" href="${escape(options.agreementHref)}" target="_blank" rel="noopener noreferrer">Contract \xB7 agreement ${escape(version)} \u2197</a>` : '<span class="basis">Contract</span>'}</div><small class="nosw">Part of the service. To stop it, leave the app.</small></div>` : '<div class="member-row"><div><strong>Service agreement</strong><small>Not accepted yet \u2014 accept it or leave the app.</small></div><button id="accept-terms" class="primary">Accept</button></div>';
+    const choices = optionalPurposes.map((purpose) => `<label class="member-row" for="purpose-${purpose.key}"><div><strong>${escape(purpose.title)}</strong><small>${escape(purpose.description)}</small><span class="basis consent">Consent</span></div><span class="switch"><input type="checkbox" role="switch" id="purpose-${purpose.key}" data-purpose="${purpose.key}"${consent2[purpose.key] ? " checked" : ""}><span class="switch-state" aria-hidden="true">${consent2[purpose.key] ? "On" : "Off"}</span></span></label>`).join("");
+    const entries = history2.length ? history2.slice().reverse().map((entry) => `<p>${escape(formatDate(entry.changedAt, "datetime"))} \xB7 ${escape(entry.type)} ${entry.granted ? "given" : "withdrawn"}</p>`).join("") : "<p>No changes yet.</p>";
+    const leave = options.owner ? "<small>You own this app: hand it over or delete it on Fidj before leaving.</small>" : options.leaving ? `<div role="alertdialog" aria-labelledby="leave-title"><p id="leave-title">${escape(options.leaveScope || "Your membership and what this app holds for you will be erased. Your other apps remain available.")}</p><button id="confirm-leave" class="danger">Leave &amp; erase</button><button id="cancel-leave">Keep my membership</button></div>` : '<button id="leave" class="danger">Leave &amp; erase</button>';
+    return `<h2>Your membership</h2><div class="member-rows">${agreementRow}${choices}</div>
+  <details class="member-history"><summary>History</summary>${entries}</details>
+  <div class="member-actions"><button id="export">Export</button>${leave}</div>${options.manageHref ? `<p class="leaving"><a href="${escape(options.manageHref)}" target="_blank" rel="noopener noreferrer">Open Fidj to manage every app you use \u2197</a></p>` : ""}`;
+  }
 
   // ../../../entry/dist/provider-window.js
   var WINDOW_NAME = "fidj-signin-" + Math.random().toString(36).slice(2, 10);
@@ -10745,7 +10757,7 @@
     apiEndpoint: "https://api.fidj.ovh/v3",
     dashboardUrl: "https://fidj.ovh",
     title: "Mat Cloud App",
-    releaseVersion: "3.17.0",
+    releaseVersion: "3.18.0",
     localDemo: false,
     allowAnonymous: false,
     signin: "both",
@@ -11008,7 +11020,7 @@
       let url;
       try {
         url = await oidc.beginLogin(
-          options.prompt || options.silent || !oidc.signedOutHere() ? options : { ...options, prompt: "login" }
+          options.prompt || options.silent || !oidc.signedOutHere() ? options : { ...options, prompt: "consent" }
         );
       } catch (error) {
         providerWindow?.giveUp();
@@ -11346,7 +11358,7 @@
         navigate("signin");
       })
     );
-    element("terms")?.addEventListener(
+    element("accept-terms")?.addEventListener(
       "click",
       () => void action(async () => {
         const agreement = await readAgreement();
@@ -11413,20 +11425,15 @@
     return `<div class="member-rows"><div class="member-row"><div><strong>Email</strong><small>${escape(accountEmail)} \xB7 verified</small></div><a href="${escape(app_config_default.dashboardUrl)}/#/my/profile" target="_blank" rel="noopener noreferrer">Manage on Fidj \u2197</a></div></div>`;
   }
   function privacyBlock() {
-    const acceptedVersion = String(consent.termsVersion || "");
-    const agreementHref = `${app_config_default.apiEndpoint}/apps/${encodeURIComponent(app_config_default.appId)}/agreements/${encodeURIComponent(acceptedVersion)}`;
-    const agreementRow = consent.terms ? `<div class="member-row"><div><strong>Service agreement</strong>${acceptedVersion ? `<a class="basis" href="${escape(agreementHref)}" target="_blank" rel="noopener noreferrer">Contract \xB7 agreement ${escape(acceptedVersion)} \u2197</a>` : '<span class="basis">Contract</span>'}</div><small class="nosw">Part of the service. To stop it, leave the app.</small></div>` : '<div class="member-row"><div><strong>Service agreement</strong><small>Not accepted yet \u2014 accept it or leave the app.</small></div><button id="terms" class="primary">Accept</button></div>';
-    const choices = optionalPurposes.map(
-      (purpose) => `<label class="member-row" for="purpose-${purpose.key}"><div><strong>${escape(purpose.title)}</strong><small>${escape(purpose.description)}</small><span class="basis consent">Consent</span></div><span class="switch"><input type="checkbox" role="switch" id="purpose-${purpose.key}" data-purpose="${purpose.key}" ${consent[purpose.key] ? "checked" : ""}><span class="switch-state" aria-hidden="true">${consent[purpose.key] ? "On" : "Off"}</span></span></label>`
-    ).join("");
-    const entries = history.length ? history.slice().reverse().map(
-      (entry) => `<p>${escape(formatDate(entry.changedAt, "datetime"))} \xB7 ${escape(entry.type)} ${entry.granted ? "given" : "withdrawn"}</p>`
-    ).join("") : "<p>No changes yet.</p>";
-    const leave = roles.includes("Owner") ? "<small>You own this app: hand it over or delete it on Fidj before leaving.</small>" : leaving ? '<p>Your membership and what this app holds for you will be erased. Your other apps remain available.</p><button id="confirm-leave" class="danger">Leave &amp; erase</button><button id="cancel-leave">Keep my membership</button>' : '<button id="leave" class="danger">Leave &amp; erase</button>';
-    return `<h2>Your membership</h2><div class="member-rows">${agreementRow}${choices}</div>
-  <details class="member-history"><summary>History</summary>${entries}</details>
-  <div class="member-actions"><button id="export">Export</button>${leave}</div>
-  <p class="leaving"><a href="${escape(app_config_default.dashboardUrl)}/#/my/gdpr" target="_blank" rel="noopener noreferrer">Open Fidj to manage every app you use \u2197</a></p>`;
+    const version = String(consent.termsVersion || "");
+    return memberCard({
+      consent,
+      history,
+      agreementHref: `${app_config_default.apiEndpoint}/apps/${encodeURIComponent(app_config_default.appId)}/agreements/${encodeURIComponent(version)}`,
+      owner: roles.includes("Owner"),
+      leaving,
+      manageHref: `${app_config_default.dashboardUrl}/#/my/gdpr`
+    });
   }
   var interactionId = "";
   var interactionError = "";
@@ -11508,6 +11515,7 @@
       agreementHref: details.termsUri || void 0,
       recognisedEmail: details.recognisedEmail || void 0,
       passkey: details.passkey,
+      agreementAccepted: details.agreementAccepted,
       logoSrc: "./fidj-logo.png"
     })}`;
     bindOidcInteraction(root);
