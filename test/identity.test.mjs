@@ -44,7 +44,7 @@ test("the public CLI produces Mat Cloud App as a static website with its origina
     /local-member-only|local-demo-only|Local accounts|Try a local demo/,
   );
   assert.match(js, /hashchange/);
-  assert.match(js, /Export my app data/);
-  assert.match(js, /Leave this app/);
+  assert.match(js, /id="export">Export</);
+  assert.match(js, /Leave &amp; erase/);
   assert.ok(!(await readdir(root)).some((name) => name.startsWith(".env")));
 });
