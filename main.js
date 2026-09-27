@@ -7590,7 +7590,7 @@
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.bpInfo = void 0;
-      exports.bpInfo = { version: "v3.18.1" };
+      exports.bpInfo = { version: "v3.19.0" };
     }
   });
 
@@ -9982,7 +9982,7 @@
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.bpInfo = void 0;
-      exports.bpInfo = { version: "v3.18.0" };
+      exports.bpInfo = { version: "v3.19.0" };
     }
   });
 
@@ -10096,7 +10096,7 @@
     if (shape === "inline") {
       return {
         shape,
-        lead: isFidjItself2 ? "One account across every app that uses Fidj, and a separate set of choices for each one." : `${title} accounts are Fidj accounts. Sign in below \u2014 ${title} handles your password itself on this page.`,
+        lead: isFidjItself2 ? "One account across every app that uses Fidj, and a separate set of choices for each one." : "",
         door: null,
         forget: null,
         disclosure: null
@@ -10395,7 +10395,7 @@
     const login = page.mode === "login";
     return {
       title: waiting ? "Check your email" : login ? "Sign in" : "Authorize",
-      heading: waiting ? "Check your email" : login ? `Sign in to your Fidj account to continue to ${escape(page.appTitle)}.` : `Continue to ${escape(page.appTitle)}`,
+      heading: waiting ? "Check your email" : login ? page.isFidjItself ? "Sign in to Fidj." : `Sign in to your Fidj account to continue to ${escape(page.appTitle)}.` : `Continue to ${escape(page.appTitle)}`,
       lead: waiting ? `Your account is created. Waiting for you to open the link sent to <strong>${escape(page.waitingEmail)}</strong>.` : "",
       fields: waiting ? waitFields(page) : login ? loginFields(page) : consentFields(page)
     };
@@ -10471,7 +10471,7 @@
       shape,
       hasCredentials: Boolean(credentials)
     });
-    const lead = `<p class="signin-lead">${escape(model.lead)}</p>`;
+    const lead = model.lead ? `<p class="signin-lead">${escape(model.lead)}</p>` : "";
     if (!model.door)
       return lead + credentials;
     const door = button(model.door, "fidj-entry");
@@ -10636,7 +10636,7 @@
   function memberCard(options) {
     const { consent: consent2, history: history2 } = options;
     const version = String(consent2.termsVersion || "");
-    const agreementRow = consent2.terms ? `<div class="member-row"><div><strong>Service agreement</strong>${options.agreementHref && version ? `<a class="basis" href="${escape(options.agreementHref)}" target="_blank" rel="noopener noreferrer">Contract \xB7 agreement ${escape(version)} \u2197</a>` : '<span class="basis">Contract</span>'}</div><small class="nosw">Part of the service. To stop it, leave the app.</small></div>` : '<div class="member-row"><div><strong>Service agreement</strong><small>Not accepted yet \u2014 accept it or leave the app.</small></div><button id="accept-terms" class="primary">Accept</button></div>';
+    const agreementRow = consent2.terms ? `<div class="member-row"><div><strong>Service agreement</strong>${options.agreementHref && version ? `<a class="basis" href="${escape(options.agreementHref)}" target="_blank" rel="noopener noreferrer">Contract \xB7 read it \u2197</a>` : '<span class="basis">Contract</span>'}</div><small class="nosw">Part of the service. To stop it, leave the app.</small></div>` : '<div class="member-row"><div><strong>Service agreement</strong><small>Not accepted yet \u2014 accept it or leave the app.</small></div><button id="accept-terms" class="primary">Accept</button></div>';
     const choices = optionalPurposes.map((purpose) => `<label class="member-row" for="purpose-${purpose.key}"><div><strong>${escape(purpose.title)}</strong><small>${escape(purpose.description)}</small><span class="basis consent">Consent</span></div><span class="switch"><input type="checkbox" role="switch" id="purpose-${purpose.key}" data-purpose="${purpose.key}"${consent2[purpose.key] ? " checked" : ""}><span class="switch-state" aria-hidden="true">${consent2[purpose.key] ? "On" : "Off"}</span></span></label>`).join("");
     const entries = history2.length ? history2.slice().reverse().map((entry) => {
       const line = historyLine(entry);
@@ -10784,7 +10784,7 @@
     apiEndpoint: "https://api.fidj.ovh/v3",
     dashboardUrl: "https://fidj.ovh",
     title: "Mat Cloud App",
-    releaseVersion: "3.18.1",
+    releaseVersion: "3.19.0",
     localDemo: false,
     allowAnonymous: false,
     signin: "both",
