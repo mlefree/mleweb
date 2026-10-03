@@ -7590,7 +7590,7 @@
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.bpInfo = void 0;
-      exports.bpInfo = { version: "v3.21.0" };
+      exports.bpInfo = { version: "v3.21.1" };
     }
   });
 
@@ -9485,6 +9485,7 @@
         }
         verifyApiState(currentTime, endpointUrl) {
           return __awaiter(this, void 0, void 0, function* () {
+            var _a;
             try {
               this._logger.log("fidj.sdk.connection.verifyApiState : ", currentTime, endpointUrl);
               const data = (yield new Ajax_1.Ajax().get({
@@ -9492,14 +9493,11 @@
                 headers: { "Content-Type": "application/json", Accept: "application/json" },
                 timeout: sdk_1.FidjNodeService.DEFAULT_TIMEOUT_MS
               })).data;
-              let state = false;
-              if (data && data.isOk) {
-                state = true;
-              }
+              const state = Boolean(data && data.isOk);
               this.states[endpointUrl] = {
                 state,
                 time: currentTime,
-                lastTimeWasOk: currentTime
+                lastTimeWasOk: state ? currentTime : ((_a = this.states[endpointUrl]) === null || _a === void 0 ? void 0 : _a.lastTimeWasOk) || 0
               };
               this._logger.log("fidj.sdk.connection.verifyApiState > states : ", this.states);
             } catch (err) {
@@ -10795,7 +10793,7 @@
     apiEndpoint: "https://api.fidj.ovh/v3",
     dashboardUrl: "https://fidj.ovh",
     title: "Mat Cloud App",
-    releaseVersion: "3.21.0",
+    releaseVersion: "3.21.1",
     localDemo: false,
     allowAnonymous: false,
     signin: "both",
