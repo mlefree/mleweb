@@ -48,6 +48,7 @@
     serif;
   --fidj-radius: 2px;
   --fidj-shell-max: 1180px;
+  --fidj-card-gap: 16px;
 }
 
 /* ../../../entry/dist/fonts.css */
@@ -962,6 +963,17 @@ body.has-module {
   text-align: center;
   margin: 0;
 }
+.implicit-submit {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  border: 0;
+  white-space: nowrap;
+}
 .signin-badges {
   margin-top: auto;
   padding-top: 24px;
@@ -1040,13 +1052,11 @@ body.has-module {
 .profile-public img {
   display: block;
 }
-.profile-summary .danger {
+.profile-summary .sign-out {
   flex: 0 0 auto;
   padding: 6px 12px;
   font-size: 13px;
   line-height: 1.5;
-  color: var(--fidj-danger);
-  border-color: var(--fidj-danger);
 }
 .profile-body {
   margin: 0;
@@ -1559,7 +1569,7 @@ button.quiet {
 .basis {
   align-self: flex-start;
   font-family: var(--fidj-font-mono);
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   padding: 2px 7px;
@@ -1615,6 +1625,29 @@ input[role=switch]:checked::after {
 input[role=switch]:focus-visible {
   outline: 2px solid var(--fidj-ink);
   outline-offset: 2px;
+}
+@media (max-width: 760px) {
+  input[role=switch] {
+    width: 44px;
+    height: 44px;
+    border-radius: 22px;
+  }
+  input[role=switch]::after {
+    top: 11px;
+    left: 5px;
+    width: 22px;
+    height: 22px;
+  }
+  input[role=switch]:checked::after {
+    left: 17px;
+  }
+  button,
+  a.button,
+  .workspace-link,
+  .member-actions a,
+  .member-actions button {
+    min-height: 44px;
+  }
 }
 .member-history {
   margin: 0 0 16px;
