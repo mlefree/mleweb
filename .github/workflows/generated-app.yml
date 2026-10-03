@@ -7,7 +7,7 @@ on:
     inputs:
       generator_ref:
         description: Generator version branch or commit to validate
-        default: 771c828a1f913c5acde1e2a6ca8b85ea59c17603
+        default: 2d1d154e3a7f2ffc7087bcacb7c4b5d0adc0eea1
       publish:
         description: Publish the generated site to gh-pages (mlefree.com)
         type: boolean
@@ -17,7 +17,7 @@ on:
         default: 17599162015438c1026c4846cf1f22b01bd6db22
       sdk_ref:
         description: SDK version branch or commit to validate
-        default: b540fdd70066958d95328ed3e978cb6bc9b174db
+        default: af3ab94c6dbaa3d4eb93d2f338d05b44c1851a25
 permissions:
   contents: read
 jobs:
@@ -34,12 +34,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: ofidj/generator-fidj
-          ref: ${{ inputs.generator_ref || '771c828a1f913c5acde1e2a6ca8b85ea59c17603' }}
+          ref: ${{ inputs.generator_ref || '2d1d154e3a7f2ffc7087bcacb7c4b5d0adc0eea1' }}
           path: generator
       - uses: actions/checkout@v4
         with:
           repository: ofidj/fidj-node
-          ref: ${{ inputs.sdk_ref || 'b540fdd70066958d95328ed3e978cb6bc9b174db' }}
+          ref: ${{ inputs.sdk_ref || 'af3ab94c6dbaa3d4eb93d2f338d05b44c1851a25' }}
           path: sdk
       - uses: actions/checkout@v4
         with:
