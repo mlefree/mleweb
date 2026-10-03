@@ -1,4 +1,4 @@
-# mleweb — Mat Cloud App
+# mleweb — mlefree.com
 
 **mlefree.com is the website used to validate that Fidj generates a complete app from a small command.** This repository is an executable generator example: the `create` script in `package.json` supplies the public app ID, title, welcome text, original Mario GIF HTML, About/CV link, contact links and domain to `create-fidj`.
 

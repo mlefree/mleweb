@@ -1,18 +1,18 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFile, readdir } from "node:fs/promises";
-test("the public CLI produces Mat Cloud App as a static website with its original inputs", async () => {
+test("the public CLI produces mlefree.com as a private, coherent English website", async () => {
   const root = ".gen/mleweb/www/";
   const html = await readFile(root + "index.html", "utf8");
-  assert.match(html, /<title>Mat Cloud App<\/title>/);
-  assert.match(html, /Bienvenue dans Mat Cloud/);
+  assert.match(html, /<title>mlefree.com<\/title>/);
+  assert.match(html, /Welcome to mlefree.com/);
   assert.match(html, /<template id="public-content">/);
   assert.match(html, /<div id="app" aria-live="polite"><\/div>/);
-  assert.match(html, /Retro_Mario_in_3D_flavor_by_cezkid.gif/);
+  assert.doesNotMatch(html, /3\.bp\.blogspot\.com|Retro_Mario|Bienvenue|Mon actualité/);
   assert.match(html, /https:\/\/blog.mlefree.com\/p\/about.html/);
   assert.match(html, /https:\/\/github.com\/ofidj/);
   assert.match(html, /https:\/\/twitter.com\/mat_cloud/);
-  assert.match(html, /hello@mlefree.com/);
+  assert.match(html, /mailto:hello@mlefree.com/);
   assert.equal((await readFile(root + "CNAME", "utf8")).trim(), "mlefree.com");
   const js = await readFile(root + "main.js", "utf8");
   assert.doesNotMatch(js, /fetch\("\/api\//);
