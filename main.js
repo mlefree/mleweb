@@ -7590,7 +7590,7 @@
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.bpInfo = void 0;
-      exports.bpInfo = { version: "v3.20.0" };
+      exports.bpInfo = { version: "v3.21.0" };
     }
   });
 
@@ -9982,7 +9982,7 @@
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.bpInfo = void 0;
-      exports.bpInfo = { version: "v3.20.0" };
+      exports.bpInfo = { version: "v3.21.0" };
     }
   });
 
@@ -10795,7 +10795,7 @@
     apiEndpoint: "https://api.fidj.ovh/v3",
     dashboardUrl: "https://fidj.ovh",
     title: "Mat Cloud App",
-    releaseVersion: "3.20.0",
+    releaseVersion: "3.21.0",
     localDemo: false,
     allowAnonymous: false,
     signin: "both",
