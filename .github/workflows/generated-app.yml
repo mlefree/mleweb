@@ -14,7 +14,7 @@ on:
         default: false
       entry_ref:
         description: Entry version branch or commit to validate
-        default: 5f150a059c31ce9ee981c4ef6e499323e23a702c
+        default: 00733911ae824720adb1d5742d9bb237623c82ef
       sdk_ref:
         description: SDK version branch or commit to validate
         default: af3ab94c6dbaa3d4eb93d2f338d05b44c1851a25
@@ -44,7 +44,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: ofidj/fidj-entry
-          ref: ${{ inputs.entry_ref || '5f150a059c31ce9ee981c4ef6e499323e23a702c' }}
+          ref: ${{ inputs.entry_ref || '00733911ae824720adb1d5742d9bb237623c82ef' }}
           path: entry
       - uses: actions/checkout@v4
         with:
