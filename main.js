@@ -7590,7 +7590,7 @@
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.bpInfo = void 0;
-      exports.bpInfo = { version: "v3.19.0" };
+      exports.bpInfo = { version: "v3.20.0" };
     }
   });
 
@@ -9982,7 +9982,7 @@
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.bpInfo = void 0;
-      exports.bpInfo = { version: "v3.19.0" };
+      exports.bpInfo = { version: "v3.20.0" };
     }
   });
 
@@ -10066,7 +10066,18 @@
       return null;
     if (typeof agreement?.text !== "string" || !agreement.text)
       return null;
-    return { version: agreement.version, text: agreement.text };
+    return {
+      version: agreement.version,
+      text: agreement.text,
+      // The language shown and the address of that text travel with it, so the
+      // link on the screen opens what the person is about to accept.
+      ...typeof agreement.language === "string" ? { language: agreement.language } : {},
+      ...typeof agreement.href === "string" ? { href: agreement.href } : {}
+    };
+  }
+  function agreementAddress(apiEndpoint, appId, agreement) {
+    const root2 = apiEndpoint.replace(/\/+$/, "");
+    return root2 + (agreement.href || `/apps/${encodeURIComponent(appId)}/agreements/${encodeURIComponent(agreement.version)}`);
   }
   function verificationPending(error) {
     if (!error || typeof error !== "object")
@@ -10784,7 +10795,7 @@
     apiEndpoint: "https://api.fidj.ovh/v3",
     dashboardUrl: "https://fidj.ovh",
     title: "Mat Cloud App",
-    releaseVersion: "3.19.0",
+    releaseVersion: "3.20.0",
     localDemo: false,
     allowAnonymous: false,
     signin: "both",
@@ -11257,7 +11268,7 @@
         app_config_default.signin
       );
     if (pendingAgreement && element("signin")) {
-      element("signin").innerHTML = agreementScreen(app_config_default.title, pendingAgreement, `${app_config_default.apiEndpoint}/apps/${encodeURIComponent(app_config_default.appId)}/agreements/${encodeURIComponent(pendingAgreement.version || "")}`);
+      element("signin").innerHTML = agreementScreen(app_config_default.title, pendingAgreement, agreementAddress(app_config_default.apiEndpoint, app_config_default.appId, pendingAgreement));
       bindAgreementScreen(element("signin"));
     }
     if (!pendingAgreement && emailEntryOpen) showEmailEntry(true);
@@ -11401,7 +11412,12 @@
       );
       if (!response.ok) return null;
       const agreement = (await response.json()).app?.agreement;
-      return typeof agreement?.version === "string" && agreement.version && typeof agreement?.text === "string" && agreement.text ? { version: agreement.version, text: agreement.text } : null;
+      return typeof agreement?.version === "string" && agreement.version && typeof agreement?.text === "string" && agreement.text ? {
+        version: agreement.version,
+        text: agreement.text,
+        ...typeof agreement.language === "string" ? { language: agreement.language } : {},
+        ...typeof agreement.href === "string" ? { href: agreement.href } : {}
+      } : null;
     } catch {
       return null;
     }
@@ -11504,10 +11520,11 @@
   }
   function privacyBlock() {
     const version = String(consent.termsVersion || "");
+    const href = consent.termsHref;
     return memberCard({
       consent,
       history,
-      agreementHref: `${app_config_default.apiEndpoint}/apps/${encodeURIComponent(app_config_default.appId)}/agreements/${encodeURIComponent(version)}`,
+      agreementHref: agreementAddress(app_config_default.apiEndpoint, app_config_default.appId, { version, href: typeof href === "string" ? href : void 0 }),
       owner: roles.includes("Owner"),
       leaving,
       manageHref: `${app_config_default.dashboardUrl}/#/my/gdpr`
