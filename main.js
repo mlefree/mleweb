@@ -7590,7 +7590,7 @@
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.bpInfo = void 0;
-      exports.bpInfo = { version: "v3.21.1" };
+      exports.bpInfo = { version: "v3.22.0" };
     }
   });
 
@@ -7629,7 +7629,7 @@
       exports.SessionVerificationError = void 0;
       exports.verifyAppSession = verifyAppSession;
       exports.verifyOrganizationSession = verifyOrganizationSession;
-      var Base64_1 = require_Base64();
+      var tools_1 = require_tools();
       var SessionVerificationError = class extends Error {
         constructor(status, message2) {
           super(message2);
@@ -7649,7 +7649,7 @@
               payload = null;
             } else {
               const encoded = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
-              payload = JSON.parse(Base64_1.Base64.decode(encoded.padEnd(Math.ceil(encoded.length / 4) * 4, "=")));
+              payload = JSON.parse(tools_1.Base64.decode(encoded.padEnd(Math.ceil(encoded.length / 4) * 4, "=")));
               if (payload.aud !== options.appId || typeof payload.sub !== "string" || typeof payload.name !== "string") {
                 throw new Error();
               }
@@ -9917,6 +9917,14 @@
     }
   });
 
+  // ../../../contracts/dist/fidj-api/FidjApiWebhooks.js
+  var require_FidjApiWebhooks = __commonJS({
+    "../../../contracts/dist/fidj-api/FidjApiWebhooks.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", { value: true });
+    }
+  });
+
   // ../../../contracts/dist/fidj-api/index.js
   var require_fidj_api = __commonJS({
     "../../../contracts/dist/fidj-api/index.js"(exports) {
@@ -9971,6 +9979,7 @@
       __exportStar(require_identity(), exports);
       __exportStar(require_FidjApiAccountSelfService(), exports);
       __exportStar(require_FidjApiPasskeys(), exports);
+      __exportStar(require_FidjApiWebhooks(), exports);
     }
   });
 
@@ -9980,7 +9989,7 @@
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.bpInfo = void 0;
-      exports.bpInfo = { version: "v3.21.0" };
+      exports.bpInfo = { version: "v3.22.0" };
     }
   });
 
@@ -10654,7 +10663,7 @@
     const leave = options.owner ? "<small>You own this app: hand it over or delete it on Fidj before leaving.</small>" : options.leaving ? `<div role="alertdialog" aria-labelledby="leave-title"><p id="leave-title">${escape(options.leaveScope || "Your membership and what this app holds for you will be erased. Your other apps remain available.")}</p><button id="confirm-leave" class="danger">Leave &amp; erase</button><button id="cancel-leave">Keep my membership</button></div>` : '<button id="leave" class="danger">Leave &amp; erase</button>';
     return `<h2>Your membership</h2><div class="member-rows">${agreementRow}${choices}</div>
   <div id="member-history" class="member-history" hidden>${entries}</div>
-  <div class="member-actions"><button type="button" id="history-toggle" aria-expanded="false" aria-controls="member-history">History</button><button id="export">Export</button>${leave}</div>${options.manageHref ? `<p class="leaving"><a href="${escape(options.manageHref)}" target="_blank" rel="noopener noreferrer">Open Fidj to manage every app you use \u2197</a></p>` : ""}`;
+  <div class="member-actions"><button type="button" id="history-toggle" aria-expanded="false" aria-controls="member-history">History</button><button id="export">Export</button>${leave}</div>${options.manageHref ? `<p class="leaving"><a href="${escape(options.manageHref)}" target="_blank" rel="noopener noreferrer">Manage every app on Fidj \u2197</a></p>` : ""}`;
   }
   function bindMemberHistory(root2) {
     const toggle = root2.querySelector("#history-toggle");
@@ -10793,7 +10802,7 @@
     apiEndpoint: "https://api.fidj.ovh/v3",
     dashboardUrl: "https://fidj.ovh",
     title: "mlefree.com",
-    releaseVersion: "3.21.1",
+    releaseVersion: "3.22.0",
     localDemo: false,
     allowAnonymous: false,
     signin: "both",
@@ -10902,8 +10911,8 @@
     return `<p role="${role}" class="${kind}">${escape(message)}${finish}</p>`;
   }
   function appNav(current) {
-    const tab = (id, label, selected) => `<button id="${id}"${selected ? ' class="selected" aria-current="page"' : ""}><span class="tab-label">${label}</span></button>`;
-    const account = signedIn ? tab("account-tab", "Profile", current === "account") : tab("account-tab", "Sign in", false);
+    const tab = (id, label, selected, profile = false) => `<button id="${id}"${selected ? ' class="selected" aria-current="page"' : ""}>${profile ? '<span class="profile-mark" aria-hidden="true"><svg viewBox="0 0 20 20"><circle cx="10" cy="7" r="3"/><path d="M4.5 16c.7-3 2.5-4.5 5.5-4.5s4.8 1.5 5.5 4.5"/></svg></span>' : ""}<span class="tab-label">${label}</span></button>`;
+    const account = signedIn ? tab("account-tab", "Profile", current === "account", true) : tab("account-tab", "Sign in", false);
     return tab("content-tab", "Content", current === "content") + account;
   }
   function profileSummary() {
@@ -11244,7 +11253,7 @@
     root.innerHTML = `<section class="signin-shell"><div class="signin-intro${app_config_default.highlights?.length ? "" : " is-plain"}">${masthead(app_config_default.logo, app_config_default.title)}
   <div class="signin-identity"><h1>${escape(app_config_default.welcome)}</h1><p class="signin-description">${escape(app_config_default.description)}</p></div>
   ${highlightCells(app_config_default.highlights)}</div>
-  <div class="signin-form"><div>${banner()}<h2>Sign in to ${escape(app_config_default.title)}</h2><form id="signin">${credentialFields({ email: signInEmail, password: signInPassword }, { passkey: passkeyHere })}</form>${app_config_default.allowAnonymous ? `<div class="signin-divider"><span>or explore first</span></div><button class="anonymous-entry" id="anonymous">Enter anonymously <span aria-hidden="true">\u2192</span></button><p class="signin-footnote">No account needed to view the content.</p>` : ""}
+  <div class="signin-form"><div><div class="signin-mobile-masthead">${masthead(app_config_default.logo, app_config_default.title)}</div>${banner()}<h2>Sign in to ${escape(app_config_default.title)}</h2><form id="signin">${credentialFields({ email: signInEmail, password: signInPassword }, { passkey: passkeyHere })}</form>${app_config_default.allowAnonymous ? `<div class="signin-divider"><span>or explore first</span></div><button class="anonymous-entry" id="anonymous">Enter anonymously <span aria-hidden="true">\u2192</span></button><p class="signin-footnote">No account needed to view the content.</p>` : ""}
   ${app_config_default.title === "Fidj" ? walletDoor() : ""}</div>
   ${badgeStrip(app_config_default.badges)}</div></section>`;
     wireNav();
