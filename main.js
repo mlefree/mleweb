@@ -7590,7 +7590,7 @@
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.bpInfo = void 0;
-      exports.bpInfo = { version: "v3.24.0" };
+      exports.bpInfo = { version: "v3.25.0" };
     }
   });
 
@@ -10007,7 +10007,7 @@
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.bpInfo = void 0;
-      exports.bpInfo = { version: "v3.24.0" };
+      exports.bpInfo = { version: "v3.25.0" };
     }
   });
 
@@ -10382,6 +10382,18 @@
       when,
       what: `${title} \xB7 ${entry.granted ? "turned on" : "turned off"}`
     };
+  }
+  var permissionMeanings = {
+    openid: "An identity specific to this app",
+    profile: "Your display name",
+    email: "Your email and verification status",
+    offline_access: "Stay signed in",
+    "fidj:api": "Use Fidj account and privacy services for this app",
+    "fidj:account.delete": "Delete your Fidj account and its data when you ask this app to"
+  };
+  function permissionLines(scope) {
+    const scopes = Array.isArray(scope) ? scope : String(scope || "").split(" ");
+    return scopes.filter((name) => permissionMeanings[name]).map((name) => permissionMeanings[name]);
   }
 
   // ../../../entry/dist/remembered.js
@@ -10820,7 +10832,7 @@
     apiEndpoint: "https://api.fidj.ovh/v3",
     dashboardUrl: "https://fidj.ovh",
     title: "mlefree.com",
-    releaseVersion: "3.24.0",
+    releaseVersion: "3.25.0",
     localDemo: false,
     allowAnonymous: false,
     signin: "both",
@@ -11563,13 +11575,6 @@
   var interactionNotYet = false;
   var interaction = null;
   var interactionFailed = false;
-  var scopeMeaning = {
-    openid: "An identity specific to this app",
-    profile: "Your display name",
-    email: "Your email and verification status",
-    offline_access: "Stay signed in",
-    "fidj:api": "Use Fidj account and privacy services for this app"
-  };
   var refusals = {
     credentials: "We could not sign you in. Check your email and password.",
     signup: "Could not create an account. Use a valid email and a password of at least 12 characters, or sign in to your existing account.",
@@ -11631,7 +11636,7 @@
       waitingEmail: details.awaiting,
       resent: interactionResent,
       notYet: interactionNotYet,
-      scopes: details.scopes.filter((scope) => scopeMeaning[scope]).map((scope) => scopeMeaning[scope]),
+      scopes: permissionLines(details.scopes),
       agreement: details.agreement || void 0,
       // The agreement is a document read in the browser, like the privacy notice.
       agreementHref: details.termsUri || void 0,
