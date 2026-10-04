@@ -7,17 +7,17 @@ on:
     inputs:
       generator_ref:
         description: Generator version branch or commit to validate
-        default: 7e9cc9323500903a7c5b5ae8962162b98c299353
+        default: e237b6ed7eef6ae738ec9742fb056263ae9a7f55
       publish:
         description: Publish the generated site to gh-pages (mlefree.com)
         type: boolean
         default: false
       entry_ref:
         description: Entry version branch or commit to validate
-        default: 866252b8d622509c2c510d4c1044e10d66495757
+        default: 943ffd70d56d3dd8ff991cadebb9b3028b0a9405
       sdk_ref:
         description: SDK version branch or commit to validate
-        default: 5b8d801dd34a26ddf6237596a68c7de35d6d9abc
+        default: 3215d0b3f131b89aa9470d3b0996d612ada93ae7
 permissions:
   contents: read
 jobs:
@@ -34,22 +34,22 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: ofidj/generator-fidj
-          ref: ${{ inputs.generator_ref || '7e9cc9323500903a7c5b5ae8962162b98c299353' }}
+          ref: ${{ inputs.generator_ref || 'e237b6ed7eef6ae738ec9742fb056263ae9a7f55' }}
           path: generator
       - uses: actions/checkout@v4
         with:
           repository: ofidj/fidj-node
-          ref: ${{ inputs.sdk_ref || '5b8d801dd34a26ddf6237596a68c7de35d6d9abc' }}
+          ref: ${{ inputs.sdk_ref || '3215d0b3f131b89aa9470d3b0996d612ada93ae7' }}
           path: sdk
       - uses: actions/checkout@v4
         with:
           repository: ofidj/fidj-entry
-          ref: ${{ inputs.entry_ref || '866252b8d622509c2c510d4c1044e10d66495757' }}
+          ref: ${{ inputs.entry_ref || '943ffd70d56d3dd8ff991cadebb9b3028b0a9405' }}
           path: entry
       - uses: actions/checkout@v4
         with:
           repository: ofidj/fidj-api-contracts
-          ref: d24e745f804d0e2933ae5b699af1ae26bebdbad8
+          ref: fabd9ab1f1e92d234d60bc6b2c19b22a8a02f9a2
           path: contracts
       - uses: actions/setup-node@v4
         with:
