@@ -7590,7 +7590,7 @@
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.bpInfo = void 0;
-      exports.bpInfo = { version: "v3.23.0" };
+      exports.bpInfo = { version: "v3.24.0" };
     }
   });
 
@@ -9933,6 +9933,14 @@
     }
   });
 
+  // ../../../contracts/dist/fidj-api/FidjApiExternalServices.js
+  var require_FidjApiExternalServices = __commonJS({
+    "../../../contracts/dist/fidj-api/FidjApiExternalServices.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", { value: true });
+    }
+  });
+
   // ../../../contracts/dist/fidj-api/index.js
   var require_fidj_api = __commonJS({
     "../../../contracts/dist/fidj-api/index.js"(exports) {
@@ -9989,6 +9997,7 @@
       __exportStar(require_FidjApiPasskeys(), exports);
       __exportStar(require_FidjApiWebhooks(), exports);
       __exportStar(require_FidjApiReceipts(), exports);
+      __exportStar(require_FidjApiExternalServices(), exports);
     }
   });
 
@@ -9998,7 +10007,7 @@
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.bpInfo = void 0;
-      exports.bpInfo = { version: "v3.23.0" };
+      exports.bpInfo = { version: "v3.24.0" };
     }
   });
 
@@ -10811,7 +10820,7 @@
     apiEndpoint: "https://api.fidj.ovh/v3",
     dashboardUrl: "https://fidj.ovh",
     title: "mlefree.com",
-    releaseVersion: "3.23.0",
+    releaseVersion: "3.24.0",
     localDemo: false,
     allowAnonymous: false,
     signin: "both",
@@ -11208,6 +11217,10 @@
       return;
     }
     if (moduleRoute()) {
+      if (recognising) {
+        root.innerHTML = '<p role="status">Loading your session\u2026</p>';
+        return;
+      }
       startModule();
       return;
     }
@@ -11711,7 +11724,9 @@
   function boot() {
     window.addEventListener("hashchange", render);
     recognising = mightBeRecognised();
-    render();
+    if (oidc && new URL(window.location.href).searchParams.has("state"))
+      root.innerHTML = '<p role="status">Completing your sign-in\u2026</p>';
+    else render();
     if (readInteraction()) {
       render();
       void loadInteraction().catch((error) => {
@@ -11721,39 +11736,46 @@
       }).finally(render);
     }
     void action(async () => {
-      if (interactionId) return;
-      if (oidc && new URL(window.location.href).searchParams.has("state")) {
-        const callback = new URL(window.location.href);
-        window.history.replaceState(null, "", window.location.pathname + "#/" + takeReturnRoute());
-        try {
-          await oidc.completeLogin(callback);
-        } catch (refusal) {
-          const why = refusal || {};
-          if (why.code === "consent_required") {
-            window.location.assign(await oidc.beginLogin());
-            return;
+      try {
+        if (interactionId) return;
+        if (oidc && new URL(window.location.href).searchParams.has("state")) {
+          const callback = new URL(window.location.href);
+          window.history.replaceState(null, "", window.location.pathname);
+          try {
+            await oidc.completeLogin(callback);
+          } catch (refusal) {
+            const why = refusal || {};
+            if (why.code === "consent_required") {
+              window.location.assign(await oidc.beginLogin());
+              return;
+            }
+            if (!why.silentRefusal) throw refusal;
           }
-          if (!why.silentRefusal) throw refusal;
+          window.history.replaceState(null, "", window.location.pathname + "#/" + takeReturnRoute());
+          try {
+            sessionStorage.removeItem("fidj.interaction.email");
+          } catch {
+          }
         }
-        try {
-          sessionStorage.removeItem("fidj.interaction.email");
-        } catch {
+        await sdk.init(app_config_default.appId, {
+          apiEndpoint: app_config_default.apiEndpoint,
+          prod: !app_config_default.localDemo
+        });
+        recognising = recognising && !sdk.isLoggedIn();
+        if (!recognising && moduleRoute()) render();
+        if (sdk.isLoggedIn()) {
+          await refresh();
+          if (!moduleRoute() && !accountRoutes.includes(currentRoute()))
+            navigate("content");
+          return;
         }
+        if (await askWhetherFidjKnowsThisBrowser()) return;
+        recognising = false;
+        render();
+      } catch (error) {
+        recognising = false;
+        throw error;
       }
-      await sdk.init(app_config_default.appId, {
-        apiEndpoint: app_config_default.apiEndpoint,
-        prod: !app_config_default.localDemo
-      });
-      recognising = recognising && !sdk.isLoggedIn();
-      if (sdk.isLoggedIn()) {
-        await refresh();
-        if (!moduleRoute() && !accountRoutes.includes(currentRoute()))
-          navigate("content");
-        return;
-      }
-      if (await askWhetherFidjKnowsThisBrowser()) return;
-      recognising = false;
-      render();
     });
   }
 })();
