@@ -7590,7 +7590,7 @@
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.bpInfo = void 0;
-      exports.bpInfo = { version: "v3.22.0" };
+      exports.bpInfo = { version: "v3.23.0" };
     }
   });
 
@@ -9925,6 +9925,14 @@
     }
   });
 
+  // ../../../contracts/dist/fidj-api/FidjApiReceipts.js
+  var require_FidjApiReceipts = __commonJS({
+    "../../../contracts/dist/fidj-api/FidjApiReceipts.js"(exports) {
+      "use strict";
+      Object.defineProperty(exports, "__esModule", { value: true });
+    }
+  });
+
   // ../../../contracts/dist/fidj-api/index.js
   var require_fidj_api = __commonJS({
     "../../../contracts/dist/fidj-api/index.js"(exports) {
@@ -9980,6 +9988,7 @@
       __exportStar(require_FidjApiAccountSelfService(), exports);
       __exportStar(require_FidjApiPasskeys(), exports);
       __exportStar(require_FidjApiWebhooks(), exports);
+      __exportStar(require_FidjApiReceipts(), exports);
     }
   });
 
@@ -9989,7 +9998,7 @@
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.bpInfo = void 0;
-      exports.bpInfo = { version: "v3.22.0" };
+      exports.bpInfo = { version: "v3.23.0" };
     }
   });
 
@@ -10802,7 +10811,7 @@
     apiEndpoint: "https://api.fidj.ovh/v3",
     dashboardUrl: "https://fidj.ovh",
     title: "mlefree.com",
-    releaseVersion: "3.22.0",
+    releaseVersion: "3.23.0",
     localDemo: false,
     allowAnonymous: false,
     signin: "both",
