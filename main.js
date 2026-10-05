@@ -7590,7 +7590,7 @@
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.bpInfo = void 0;
-      exports.bpInfo = { version: "v3.25.0" };
+      exports.bpInfo = { version: "v3.26.0" };
     }
   });
 
@@ -10007,7 +10007,7 @@
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.bpInfo = void 0;
-      exports.bpInfo = { version: "v3.25.0" };
+      exports.bpInfo = { version: "v3.26.0" };
     }
   });
 
@@ -10832,7 +10832,7 @@
     apiEndpoint: "https://api.fidj.ovh/v3",
     dashboardUrl: "https://fidj.ovh",
     title: "mlefree.com",
-    releaseVersion: "3.25.0",
+    releaseVersion: "3.26.0",
     localDemo: false,
     allowAnonymous: false,
     signin: "both",
