@@ -29,6 +29,12 @@
   --fidj-ok: #3f7a4f;
   --fidj-warn: #c07a1e;
   --fidj-warn-tint: #fbf7f1;
+  --fidj-exit-a: #2e7d32;
+  --fidj-exit-b: #7a8a1f;
+  --fidj-exit-c: #c2570c;
+  --fidj-exit-d: #d6342c;
+  --fidj-exit-e: #7a1f1a;
+  --fidj-exit-candidate: #6b6560;
   --fidj-focus-ring: 0 0 0 3px rgb(20 17 15 / 0.07);
   --fidj-overlay-shadow: 0 12px 32px rgb(20 17 15 / 0.18);
   --fidj-font-sans:
@@ -966,6 +972,17 @@ body.has-module {
   text-align: center;
   margin: 0;
 }
+.echoes-tab {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  border: 0;
+  white-space: nowrap;
+}
 .implicit-submit {
   position: absolute;
   width: 1px;
@@ -1033,7 +1050,7 @@ body.has-module {
 }
 .profile-summary {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
   margin-bottom: 12px;
   padding: 14px 16px;
@@ -1053,9 +1070,12 @@ body.has-module {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.profile-summary-copy > span:last-child {
-  color: var(--fidj-text-faint);
-  font-size: 13px;
+.profile-identity {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  min-width: 0;
 }
 .profile-public {
   display: flex;
@@ -1067,9 +1087,13 @@ body.has-module {
 }
 .profile-summary .sign-out {
   flex: 0 0 auto;
+  margin: 0;
   padding: 6px 12px;
   font-size: 13px;
   line-height: 1.5;
+  color: var(--fidj-danger);
+  border-color: var(--fidj-danger);
+  background: transparent;
 }
 .profile-body {
   margin: 0;
@@ -1103,20 +1127,18 @@ body.has-module {
   gap: 7px;
 }
 .topbar .content-nav .profile-mark {
-  width: 20px;
-  height: 20px;
-  flex: 0 0 20px;
-  border: 1px solid currentColor;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
   border-radius: 50%;
   display: grid;
   place-items: center;
-}
-.topbar .content-nav .profile-mark svg {
-  width: 15px;
-  height: 15px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.4;
+  background: hsl(var(--avatar-hue, 220) 50% 35%);
+  color: var(--fidj-on-ink);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1;
 }
 .topbar .content-nav button:hover:not(:disabled) {
   color: var(--fidj-on-ink);

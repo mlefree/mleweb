@@ -7590,7 +7590,7 @@
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.bpInfo = void 0;
-      exports.bpInfo = { version: "v3.26.0" };
+      exports.bpInfo = { version: "v3.27.0" };
     }
   });
 
@@ -10007,7 +10007,7 @@
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.bpInfo = void 0;
-      exports.bpInfo = { version: "v3.26.0" };
+      exports.bpInfo = { version: "v3.27.0" };
     }
   });
 
@@ -10394,6 +10394,19 @@
   function permissionLines(scope) {
     const scopes = Array.isArray(scope) ? scope : String(scope || "").split(" ");
     return scopes.filter((name) => permissionMeanings[name]).map((name) => permissionMeanings[name]);
+  }
+  function profileAvatar(name, email) {
+    const address = String(email || "").trim().toLowerCase();
+    const words = (source) => source.split(/[\s._+-]+/).filter(Boolean);
+    const named = words(String(name || "").trim());
+    const parts = named.length ? named : words(address.split("@")[0]);
+    const letters = (word) => Array.from(word);
+    const initials = parts.length > 1 ? letters(parts[0])[0] + letters(parts[parts.length - 1])[0] : letters(parts[0] || "").slice(0, 2).join("");
+    let hash = 0;
+    for (const char of address || String(name || "")) {
+      hash = hash * 31 + char.codePointAt(0) >>> 0;
+    }
+    return { initials: initials.toUpperCase() || "?", hue: hash % 360 };
   }
 
   // ../../../entry/dist/remembered.js
@@ -10832,7 +10845,7 @@
     apiEndpoint: "https://api.fidj.ovh/v3",
     dashboardUrl: "https://fidj.ovh",
     title: "mlefree.com",
-    releaseVersion: "3.26.0",
+    releaseVersion: "3.27.0",
     localDemo: false,
     allowAnonymous: false,
     signin: "both",
@@ -10918,6 +10931,7 @@
   var verificationResent = false;
   var verificationNotice = "";
   var accountEmail = "";
+  var accountName = "";
   var emailEntryOpen = false;
   var accountRoutes = ["forgot", "reset", "verify", "profile"];
   var linkToken = "";
@@ -10940,15 +10954,19 @@
     const finish = leftTheApp ? ` <a href="${escape(app_config_default.dashboardUrl)}/#/my/profile" target="_blank" rel="noopener">Sign out of Fidj too</a>` : "";
     return `<p role="${role}" class="${kind}">${escape(message)}${finish}</p>`;
   }
+  function profileMark() {
+    const { initials, hue } = profileAvatar(accountName, accountEmail);
+    return `<span class="profile-mark" aria-hidden="true" style="--avatar-hue:${hue}">${escape(initials)}</span>`;
+  }
   function appNav(current) {
-    const tab = (id, label, selected, profile = false) => `<button id="${id}"${selected ? ' class="selected" aria-current="page"' : ""}>${profile ? '<span class="profile-mark" aria-hidden="true"><svg viewBox="0 0 20 20"><circle cx="10" cy="7" r="3"/><path d="M4.5 16c.7-3 2.5-4.5 5.5-4.5s4.8 1.5 5.5 4.5"/></svg></span>' : ""}<span class="tab-label">${label}</span></button>`;
+    const tab = (id, label, selected, profile = false) => `<button id="${id}"${selected ? ' class="selected" aria-current="page"' : ""}><span class="tab-label">${label}</span>${profile ? profileMark() : ""}</button>`;
     const account = signedIn ? tab("account-tab", "Profile", current === "account", true) : tab("account-tab", "Sign in", false);
     return tab("content-tab", "Content", current === "content") + account;
   }
   function profileSummary() {
     const publicUrl = `${app_config_default.dashboardUrl}/#/pub/${encodeURIComponent(app_config_default.appId)}`;
     const badgeUrl = `${app_config_default.apiEndpoint}/apps/${encodeURIComponent(app_config_default.appId)}/badge`;
-    return `<header class="profile-summary"><div class="profile-summary-copy"><h1 class="eyebrow">Profile</h1><strong>${escape(accountEmail)}</strong><span>${escape(app_config_default.title)}</span></div><a class="profile-public" href="${escape(publicUrl)}" target="_blank" rel="noopener"><img src="${escape(badgeUrl)}" alt="${escape(app_config_default.title)} public badge" width="133" height="20"></a><button id="exit" class="sign-out">Sign out</button></header>`;
+    return `<header class="profile-summary"><div class="profile-summary-copy"><h1 class="echoes-tab">Profile</h1><div class="profile-identity"><strong>${escape(accountEmail)}</strong><a class="profile-public" href="${escape(publicUrl)}" target="_blank" rel="noopener"><img src="${escape(badgeUrl)}" alt="${escape(app_config_default.title)} public badge" width="190" height="28"></a></div></div><button id="exit" class="sign-out">Sign out</button></header>`;
   }
   function renderNav(current) {
     const nav = element("app-nav");
@@ -11005,6 +11023,7 @@
     emailVerified = me?.verified === true;
     signedIn = true;
     accountEmail = String(me?.poc?.email || me?.username || "");
+    accountName = String(me?.name || "");
     rememberSignIn(app_config_default.appId, accountEmail);
   }
   async function action(task) {
